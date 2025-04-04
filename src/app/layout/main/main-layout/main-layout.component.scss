@@ -1,0 +1,31 @@
+:host {
+  display: grid;
+  grid-template-rows: 40px 1fr 40px; // Defines a fixed height for the header and footer, and flexible space for the main content
+  grid-template-columns: 100%;
+  height: 100vh;
+}
+
+phq-header {
+  background-color: #007bff;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+}
+
+.main-layout-content {
+  background-color: #f8f9fa;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+phq-footer {
+  background-color: #343a40;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.9rem;
+}

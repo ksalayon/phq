@@ -4,8 +4,6 @@ import { Component } from '@angular/core';
   selector: 'phq-bookmarks-page',
   imports: [],
   templateUrl: './bookmarks-page.component.html',
-  styleUrl: './bookmarks-page.component.css'
+  styleUrl: './bookmarks-page.component.css',
 })
-export class BookmarksPageComponent {
-
-}
+export class BookmarksPageComponent {}
