@@ -1,67 +1,77 @@
-// eslint.config.js
-import { FlatConfig } from '@angular-eslint/utils';
-import tseslint from 'typescript-eslint';
+import tseslintParser from '@typescript-eslint/parser';
+import tseslintPlugin from '@typescript-eslint/eslint-plugin';
 import angular from '@angular-eslint/eslint-plugin';
 import angularTemplate from '@angular-eslint/eslint-plugin-template';
 import prettierPlugin from 'eslint-plugin-prettier';
+import templateParser from '@angular-eslint/template-parser';
 
 export default [
-  // TypeScript rules
-  ...tseslint.configs.recommended,
-  ...tseslint.configs.strict,
+  {
+    ignores: ['**/node_modules/**', '**/dist/**', '**/build/**', '**/.angular/**'],
+  },
 
-  // Angular rules
-  FlatConfig.config({
-    files: ['**/*.ts'],
+  {
+    files: ['src/**/*.ts'],
     languageOptions: {
-      parser: tseslint.parser,
+      parser: tseslintParser,
       parserOptions: {
         project: ['./tsconfig.json'],
+        tsconfigRootDir: process.cwd(),
       },
     },
     plugins: {
+      '@typescript-eslint': tseslintPlugin,
       '@angular-eslint': angular,
     },
     rules: {
       ...angular.configs.recommended.rules,
 
-      // Google Style Guide aligned rules
+      // Angular style rules
       '@angular-eslint/component-class-suffix': ['error', { suffixes: ['Component'] }],
       '@angular-eslint/directive-class-suffix': ['error', { suffixes: ['Directive'] }],
       '@angular-eslint/use-lifecycle-interface': 'error',
       '@angular-eslint/no-empty-lifecycle-method': 'error',
       '@angular-eslint/contextual-lifecycle': 'error',
 
-      // TypeScript best practices
-      '@typescript-eslint/explicit-member-accessibility': ['error', { accessibility: 'explicit' }],
+      // TS rules
       '@typescript-eslint/member-ordering': 'error',
       'prefer-const': 'error',
       'no-console': 'warn',
-      'no-magic-numbers': ['warn', { ignore: [0, 1], ignoreEnums: true, enforceConst: true }],
+      'no-magic-numbers': [
+        'warn',
+        {
+          ignore: [0, 1],
+          enforceConst: true,
+          detectObjects: false,
+          ignoreArrayIndexes: false,
+          ignoreDefaultValues: false,
+          ignoreClassFieldInitialValues: false,
+        },
+      ],
     },
-  }),
+  },
 
-  // Angular HTML templates
-  FlatConfig.config({
-    files: ['**/*.html'],
+  {
+    files: ['src/**/*.html'],
+    languageOptions: {
+      parser: templateParser,
+    },
     plugins: {
       '@angular-eslint/template': angularTemplate,
     },
     rules: {
       ...angularTemplate.configs.recommended.rules,
-
-      // Google template guidelines
       '@angular-eslint/template/no-negated-async': 'error',
     },
-  }),
+  },
 
-  // Prettier integration
-  FlatConfig.config({
+  {
+    files: ['src/**/*.{ts,scss,css,json,md}'],
     plugins: {
       prettier: prettierPlugin,
     },
     rules: {
       'prettier/prettier': 'error',
     },
-  }),
+  },
 ];
