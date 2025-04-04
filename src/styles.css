@@ -1,9 +1,10 @@
 /* You can add global styles to this file, and also import other style files */
-body, html {
-  margin: 0;
-  padding: 0;
+html, body {
   height: 100%;
-  font-family: Arial, sans-serif;
   overflow: hidden;
-  background-color: #eee;
+}
+
+body {
+  margin: 0;
+  font-family: Roboto, "Helvetica Neue", sans-serif;
 }
