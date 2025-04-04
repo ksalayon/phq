@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { of } from 'rxjs';
-import { Bookmark, UpdateBookmarkPayload } from '../models/bookmark';
+import { Bookmark, CreateBookmarkPayload, UpdateBookmarkPayload } from '../models/bookmark';
 
 @Injectable()
 export class BookmarkService {
@@ -22,7 +22,7 @@ export class BookmarkService {
     return of(id);
   }
 
-  createBookmark(bookmark: Bookmark) {
-    return of(bookmark);
+  createBookmark(bookmark: CreateBookmarkPayload) {
+    return of(bookmark as Bookmark);
   }
 }

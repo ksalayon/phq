@@ -22,4 +22,5 @@ export interface Bookmark {
   modifiedAt: Date; // modification timestamp
 }
 
-export type UpdateBookmarkPayload = Pick<Bookmark, 'url'>;
+export type UpdateBookmarkPayload = Pick<Bookmark, 'url' | 'id'>;
+export type CreateBookmarkPayload = Pick<Bookmark, 'url'>;

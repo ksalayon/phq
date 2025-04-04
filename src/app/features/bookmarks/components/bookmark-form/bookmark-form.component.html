@@ -1,0 +1,16 @@
+<form [formGroup]="form" (ngSubmit)="onSubmit()">
+  <label for="url">Bookmark URL</label>
+  <input
+    id="url"
+    type="url"
+    formControlName="url"
+    placeholder="https://example.com"
+  />
+  <div *ngIf="urlControl?.invalid && urlControl?.dirty">
+    <small class="error">A valid URL is required.</small>
+  </div>
+
+  <button type="submit" [disabled]="form.invalid">
+    {{ bookmark ? 'Update' : 'Add' }} Bookmark
+  </button>
+</form>

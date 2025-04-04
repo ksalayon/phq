@@ -3,7 +3,7 @@ import { provideRouter } from '@angular/router';
 
 import { routes } from './app.routes';
 import { provideStore } from '@ngrx/store';
-import { provideEffects } from '@ngrx/effects';
+import { provideEffects } from '@ngrx/effects'; // 👈 add this
 import { provideStoreDevtools } from '@ngrx/store-devtools';
 import { provideRouterStore } from '@ngrx/router-store';
 
@@ -12,7 +12,8 @@ export const appConfig: ApplicationConfig = {
     provideZoneChangeDetection({ eventCoalescing: true }),
     provideRouter(routes),
     provideStore(),
-    provideEffects(),
+    // @ts-ignore
+    provideEffects(() => []), // ✅ creates the Actions token
     provideStoreDevtools({
       maxAge: 25,
       logOnly: !isDevMode(),

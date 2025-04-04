@@ -1,7 +1,9 @@
 import { createEntityAdapter, EntityAdapter, EntityState } from '@ngrx/entity';
-import { createReducer, on } from '@ngrx/store';
-import * as BookmarksActions from './bookmarks.actions';
+import { createFeature, createReducer, on } from '@ngrx/store';
+import { BookmarksActions } from './bookmarks.actions';
 import { Bookmark } from '../models/bookmark';
+
+export const bookmarksFeatureKey = 'bookmarks';
 
 export interface BookmarksState extends EntityState<Bookmark> {
   error: string | null;
@@ -30,17 +32,18 @@ export const bookmarksReducer = createReducer(
   })),
 
   // Create Bookmark
-  on(BookmarksActions.createBookmarkSuccess, (state, { bookmark }) =>
-    bookmarksAdapter.addOne(bookmark, state)
-  ),
+  on(BookmarksActions.createBookmarkSuccess, (state, { bookmark }) => {
+    console.log('createBookmarkSuccess$', bookmark);
+    return bookmarksAdapter.addOne(bookmark, state);
+  }),
   on(BookmarksActions.createBookmarkFailure, (state, { error }) => ({
     ...state,
     error,
   })),
 
   // Update Bookmark
-  on(BookmarksActions.updateBookmarkSuccess, (state, { id, changes }) =>
-    bookmarksAdapter.updateOne({ id, changes }, state)
+  on(BookmarksActions.updateBookmarkSuccess, (state, { changes }) =>
+    bookmarksAdapter.updateOne({ id: changes.id, changes }, state)
   ),
   on(BookmarksActions.updateBookmarkFailure, (state, { error }) => ({
     ...state,
@@ -56,3 +59,9 @@ export const bookmarksReducer = createReducer(
     error,
   }))
 );
+
+export const bookmarksFeature = createFeature({
+  name: bookmarksFeatureKey,
+  reducer: bookmarksReducer,
+  //selectSelf: (state: any) => state[bookmarksFeatureKey], // optional but nice
+});
