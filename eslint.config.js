@@ -66,7 +66,7 @@ export default [
   },
 
   {
-    files: ['src/**/*.{ts,scss,css,json,md}'],
+    files: ['src/**/*.{ts,json,md}'],
     plugins: {
       prettier: prettierPlugin,
     },

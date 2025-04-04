@@ -8,7 +8,7 @@ import { HeaderNavItem } from './models/HeaderComponentModels';
   selector: 'phq-header',
   imports: [MatToolbar, RouterLink, NgForOf],
   templateUrl: './header.component.html',
-  styleUrl: './header.component.css',
+  styleUrl: './header.component.scss',
 })
 export class HeaderComponent {
   @Input() navLinks: HeaderNavItem[] = [];

@@ -1,0 +1,21 @@
+.spacer {
+  flex: 1 1 auto;
+}
+
+.logo {
+  font-weight: 600;
+  color: lavender;
+}
+
+a {
+  margin: 0 5px;
+}
+
+mat-toolbar {
+  background-color: #007bff;
+
+  a {
+    color: #fff;
+    text-decoration: none;
+  }
+}
