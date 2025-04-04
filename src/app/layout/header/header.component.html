@@ -1,1 +1,5 @@
-<p>header works!</p>
+<mat-toolbar color="primary">
+  <span class="logo">PHQ Test</span>
+  <span class="spacer"></span>
+  <a *ngFor="let link of navLinks" [routerLink]="link.path">{{ link.label }}</a>
+</mat-toolbar>
