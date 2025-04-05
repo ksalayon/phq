@@ -8,8 +8,18 @@ import templateParser from '@angular-eslint/template-parser';
 export default [
   {
     ignores: ['**/node_modules/**', '**/dist/**', '**/build/**', '**/.angular/**'],
+    // Need to override this or the inject() method for doing DI in Angular will show an error
+    // This is specially important for the effects file where if Actions was injected after the actual created effect method, the
+    // action$ will be undefined and will throw an error when the Effect is initialized at provideEffects()
+    overrides: [
+      {
+        files: ['src/app/**/*.ts'],
+        rules: {
+          '@typescript-eslint/member-ordering': 'off',
+        },
+      },
+    ],
   },
-
   {
     files: ['src/**/*.ts'],
     languageOptions: {

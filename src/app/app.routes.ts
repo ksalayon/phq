@@ -2,9 +2,13 @@ import { Routes } from '@angular/router';
 import { MainLayoutComponent } from './layout/main/main-layout/main-layout.component';
 import { BookmarkService } from './features/bookmarks/services/bookmark.service';
 import { provideState } from '@ngrx/store';
-import { bookmarksFeature } from './features/bookmarks/state/bookmarks.reducer';
-import { BookmarksEffects } from './features/bookmarks/state/bookmarks.effects';
+import {
+  bookmarksFeatureKey,
+  bookmarksReducer,
+} from './features/bookmarks/state/bookmarks.reducer';
 import { provideEffects } from '@ngrx/effects';
+import { BookmarksEffects } from './features/bookmarks/state/bookmarks.effects';
+import { BookmarksResolver } from './features/bookmarks/bookmarks.resolver';
 
 export const routes: Routes = [
   {
@@ -25,10 +29,13 @@ export const routes: Routes = [
             (m) => m.BookmarksPageComponent
           ),
         providers: [
-          provideState(bookmarksFeature),
-          provideEffects(BookmarksEffects),
           BookmarkService,
+          provideState({ name: bookmarksFeatureKey, reducer: bookmarksReducer }),
+          provideEffects([BookmarksEffects]),
         ],
+        resolve: {
+          bookmarksInitialized: BookmarksResolver, // Makes sure that the bookmarks store is ready before loading the route
+        },
       },
     ],
   },

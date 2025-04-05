@@ -23,6 +23,7 @@ export class BookmarkService {
   }
 
   createBookmark(bookmark: CreateBookmarkPayload) {
-    return of(bookmark as Bookmark);
+    const uniqueId = crypto.randomUUID(); // Generate the unique ID for the bookmark entity
+    return of({ ...bookmark, id: uniqueId } as Bookmark);
   }
 }

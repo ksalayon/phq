@@ -15,10 +15,6 @@ export class BookmarksPageComponent {
   constructor(private store: Store) {}
 
   onFormSubmit($event: CreateBookmarkPayload) {
-    // this.store.dispatch({
-    //   type: BookmarkActions.createBookmark,
-    //   payload: $event,
-    // });
     this.store.dispatch(BookmarksActions.createBookmark({ payload: $event }));
   }
 }
