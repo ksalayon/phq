@@ -1,6 +1,11 @@
 import { Injectable } from '@angular/core';
 import { of } from 'rxjs';
-import { Bookmark, CreateBookmarkPayload, UpdateBookmarkPayload } from '../models/bookmark';
+import {
+  Bookmark,
+  CreateBookmarkPayload,
+  defaultBookmarkGroup,
+  UpdateBookmarkPayload,
+} from '../models/bookmark';
 
 @Injectable()
 export class BookmarkService {
@@ -24,6 +29,12 @@ export class BookmarkService {
 
   createBookmark(bookmark: CreateBookmarkPayload) {
     const uniqueId = crypto.randomUUID(); // Generate the unique ID for the bookmark entity
-    return of({ ...bookmark, id: uniqueId } as Bookmark);
+    const currentDate = new Date();
+    return of({
+      ...bookmark,
+      id: uniqueId,
+      createdAt: currentDate,
+      bookmarkGroupId: defaultBookmarkGroup.name,
+    } as Bookmark);
   }
 }

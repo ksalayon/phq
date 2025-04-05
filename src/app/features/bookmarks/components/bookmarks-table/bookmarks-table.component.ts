@@ -1,9 +1,10 @@
-import { AfterViewInit, Component, ViewChild } from '@angular/core';
+import { AfterViewInit, Component, inject, OnInit, ViewChild } from '@angular/core';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
 import { CommonModule } from '@angular/common';
-import { sampleBookmarks } from './bookmarks.sample-data';
 import { VMBookmark } from './bookmarks-table.models';
+import { Store } from '@ngrx/store';
+import { selectAllBookmarks } from '../../state/bookmarks.selectors';
 
 @Component({
   standalone: true,
@@ -16,19 +17,33 @@ import { VMBookmark } from './bookmarks-table.models';
     MatPaginatorModule, // Provides paginator functionality
   ],
 })
-export class BookmarksTableComponent implements AfterViewInit {
+export class BookmarksTableComponent implements AfterViewInit, OnInit {
   displayedColumns: string[] = ['name', 'url', 'bookmarkGroupId', 'createdAt', 'modifiedAt'];
-  dataSource: MatTableDataSource<VMBookmark>;
+  dataSource!: MatTableDataSource<VMBookmark>;
 
   @ViewChild(MatPaginator) paginator!: MatPaginator;
 
+  private store = inject(Store);
+
   constructor() {
     // Initialize dataSource with the sample data
-    this.dataSource = new MatTableDataSource(sampleBookmarks);
+    // this.dataSource = new MatTableDataSource(sampleBookmarks);
+  }
+
+  ngOnInit(): void {
+    this.store.select(selectAllBookmarks).subscribe((bookmarks) => {
+      this.dataSource = new MatTableDataSource<VMBookmark>(
+        bookmarks.map((bm) => ({
+          ...bm,
+          createdAt: bm.createdAt.toLocaleString(),
+          modifiedAt: bm?.modifiedAt?.toLocaleString(),
+        }))
+      );
+      this.dataSource.paginator = this.paginator;
+    });
   }
 
   ngAfterViewInit(): void {
-    // Assign MatPaginator to dataSource AFTER the view is initialized
     this.dataSource.paginator = this.paginator;
   }
 }

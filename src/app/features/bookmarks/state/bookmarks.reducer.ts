@@ -2,6 +2,7 @@ import { createEntityAdapter, EntityAdapter, EntityState } from '@ngrx/entity';
 import { createReducer, on } from '@ngrx/store';
 import { BookmarksActions } from './bookmarks.actions';
 import { Bookmark } from '../models/bookmark';
+import { sampleBookmarks } from '../components/bookmarks-table/bookmarks.sample-data';
 
 export const bookmarksFeatureKey = 'bookmarks';
 
@@ -11,8 +12,8 @@ export interface BookmarksState extends EntityState<Bookmark> {
 }
 
 export const bookmarksAdapter: EntityAdapter<Bookmark> = createEntityAdapter<Bookmark>();
-
 export const initialState: BookmarksState = bookmarksAdapter.getInitialState({
+  entities: sampleBookmarks,
   error: null,
   loading: false,
 });
