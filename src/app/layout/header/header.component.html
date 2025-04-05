@@ -1,5 +1,10 @@
 <mat-toolbar color="primary">
   <span class="logo">PHQ Test</span>
   <span class="spacer"></span>
-  <a *ngFor="let link of navLinks" [routerLink]="link.path">{{ link.label }}</a>
+  <ng-container *ngFor="let link of navLinks; let last = last">
+    <a [routerLink]="link.path">{{ link.label }}</a>
+    <mat-divider [vertical]="true" [class.hide]="last"></mat-divider>
+  </ng-container>
+
+
 </mat-toolbar>

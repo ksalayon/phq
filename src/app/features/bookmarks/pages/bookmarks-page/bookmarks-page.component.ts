@@ -40,12 +40,21 @@ export class BookmarksPageComponent implements OnInit {
   modalService = inject(ModalService);
 
   ngOnInit() {
+    this.monitorFormSubmissionProgress();
+  }
+
+  /**
+   * Monitors the progress of form submission by observing the submission state and
+   * capturing any associated errors. Updates internal subjects to reflect the current
+   * state of form submission and errors.
+   *
+   * @return {void} This method does not return a value.
+   */
+  private monitorFormSubmissionProgress(): void {
     this.store
       .select(selectIsSubmitting)
       .pipe(takeUntilDestroyed(this.destroyRef), withLatestFrom(this.store.select(selectError)))
       .subscribe(([isSubmitting, error]) => {
-        console.log('error', error);
-        console.log('isSubmitting', isSubmitting);
         this.isFormSubmittingSubject$.next(isSubmitting);
         if (!isSubmitting) {
           this?.bookmarkErrorSubject$?.next(error);
@@ -53,8 +62,13 @@ export class BookmarksPageComponent implements OnInit {
       });
   }
 
-  onFormSubmit($event: CreateBookmarkPayload) {
-    console.log('onFormSubmit', $event);
+  /**
+   * Handles the submission of the form to create a new bookmark.
+   *
+   * @param {CreateBookmarkPayload} $event - The payload containing the data necessary to create a bookmark.
+   * @return {void} No return value.
+   */
+  onFormSubmit($event: CreateBookmarkPayload): void {
     this.store.dispatch(BookmarksActions.createBookmark({ payload: $event }));
   }
 
@@ -63,17 +77,20 @@ export class BookmarksPageComponent implements OnInit {
     console.log('onDeleteBookmark', bookmark);
   }
 
-  onEditBookmark(bookmark: VMBookmark) {
-    console.log('onEditBookmark', bookmark);
-    console.log(
-      'BookmarksUtils.transformSingleVMToBookmark(bookmark)',
-      BookmarksUtils.transformSingleVMToBookmark(bookmark)
-    );
+  /**
+   * Opens a modal to edit an existing bookmark. The modal pre-fills the provided bookmark's details,
+   * and dispatches an event to update the bookmark upon submission.
+   *
+   * @param {VMBookmark} bookmark - The bookmark object that needs to be edited, passed to the modal form.
+   * @return {void} No value is returned.
+   */
+  onEditBookmark(bookmark: VMBookmark): void {
     this.modalService.open(BookmarkFormComponent, {
       inputs: {
         bookmark: BookmarksUtils.transformSingleVMToBookmark(bookmark),
         isLoading$: this.isFormSubmitting$,
         error$: this.bookmarkError$,
+        orientation: 'vertical',
       },
       outputs: {
         submitted: (data) => {
@@ -82,7 +99,6 @@ export class BookmarksPageComponent implements OnInit {
           this.modalService.close();
         },
         closed: () => {
-          console.log('Modal closed');
           this.modalService.close();
         },
       },

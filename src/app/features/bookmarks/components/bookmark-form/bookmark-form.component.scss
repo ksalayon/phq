@@ -1,11 +1,30 @@
-form {
-  display: flex;
-  flex-direction: row;
-  gap: 10px;
-  align-items: center;
-  margin: 10px;
+:host {
+  form {
+    display: flex;
+    flex-direction: row;
+    gap: 10px;
+    align-items: center;
+    margin: 10px;
 
-  button {
-    margin-bottom: 20px; // To vertically align button alongside input with hidden spaces below for error messages
+    button {
+      margin-bottom: 20px; // To vertically align button alongside input with hidden spaces below for error messages
+    }
+  }
+
+  &.vertical {
+    display: flex;
+    flex-direction: column;
+
+    > form {
+      flex-direction: column;
+      align-items: stretch;
+      min-width: 400px;
+      place-content: stretch;
+      flex: 1 1 0;
+      display: flex;
+
+    }
   }
 }
+
+

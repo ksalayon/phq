@@ -3,6 +3,7 @@ import {
   Component,
   DestroyRef,
   EventEmitter,
+  HostBinding,
   inject,
   Input,
   OnInit,
@@ -43,6 +44,13 @@ export class BookmarkFormComponent implements OnInit, BaseFormInterface<UpdateBo
   @Output() submitted = new EventEmitter<UpdateBookmarkPayload>();
   @Input() error$?: Observable<string | null>;
   @Output() closed = new EventEmitter<void>();
+  // Input to determine orientation of the form i.e. horizontal or vertical
+  @Input() orientation: 'horizontal' | 'vertical' = 'horizontal';
+
+  // set host css class based on the orientation input
+  @HostBinding('class') get orientationClass() {
+    return this.orientation; // Example for orientation class
+  }
 
   form!: FormGroup;
   destroyRef = inject(DestroyRef);

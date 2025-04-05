@@ -4,18 +4,25 @@
 
 .logo {
   font-weight: 600;
-  color: lavender;
+  color: #343a40;
 }
 
 a {
   margin: 0 5px;
 }
 
+mat-divider {
+  height: 50%;
+
+  &.hide {
+    display: none;
+  }
+}
+
 mat-toolbar {
-  background-color: #007bff;
 
   a {
-    color: #fff;
+    color: darkslategray;
     text-decoration: none;
   }
 }
