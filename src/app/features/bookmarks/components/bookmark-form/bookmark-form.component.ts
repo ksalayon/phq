@@ -19,6 +19,7 @@ import { CommonModule } from '@angular/common';
 import { MatProgressSpinner } from '@angular/material/progress-spinner';
 import { Observable } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { BaseFormInterface } from '../../../../shared/models/base-form.interface';
 
 @Component({
   standalone: true,
@@ -36,12 +37,11 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
     MatProgressSpinner,
   ],
 })
-export class BookmarkFormComponent implements OnInit {
+export class BookmarkFormComponent implements OnInit, BaseFormInterface<UpdateBookmarkPayload> {
   @Input() bookmark?: Bookmark;
   @Input({ required: true }) isLoading$!: Observable<boolean>;
-  @Output() formSubmitted = new EventEmitter<UpdateBookmarkPayload>();
+  @Output() submitted = new EventEmitter<UpdateBookmarkPayload>();
   @Input() error$?: Observable<string | null>;
-  @Output() submitted = new EventEmitter<string>();
   @Output() closed = new EventEmitter<void>();
 
   form!: FormGroup;
@@ -82,7 +82,7 @@ export class BookmarkFormComponent implements OnInit {
         ...(this.bookmark?.id ? { id: this.bookmark.id } : {}),
         ...this.form.value,
       };
-      this.formSubmitted.emit(payload); //  Emit form submission event
+      this.submitted.emit(payload); //  Emit form submission event
       this.form.reset();
       this.form.markAsPristine();
       this.form.markAsUntouched(); // Ensure the form is "reset" visually
