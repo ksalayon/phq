@@ -10,7 +10,7 @@ import {
 } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Bookmark, UpdateBookmarkPayload } from '../../models/bookmark';
-import { BookmarksUtils } from '../../utils';
+import { BookmarksUtils } from '../../utils/bookmark.util';
 import { MatIcon } from '@angular/material/icon';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';

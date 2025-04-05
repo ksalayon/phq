@@ -2,7 +2,7 @@ import { createEntityAdapter, EntityAdapter, EntityState } from '@ngrx/entity';
 import { createReducer, on } from '@ngrx/store';
 import { BookmarksActions } from './bookmarks.actions';
 import { Bookmark } from '../models/bookmark';
-import { sampleBookmarks } from '../components/bookmarks-table/bookmarks.sample-data';
+import { sampleBookmarks } from '../utils/bookmarks.sample-data.util';
 
 export const bookmarksFeatureKey = 'bookmarks';
 

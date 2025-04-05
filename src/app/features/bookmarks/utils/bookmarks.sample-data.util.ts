@@ -1,4 +1,4 @@
-import { Bookmark } from '../../models/bookmark';
+import { Bookmark } from '../models/bookmark';
 
 function getRandomPastDate(daysBack: number): Date {
   const randomDays = Math.floor(Math.random() * daysBack) + 1;
