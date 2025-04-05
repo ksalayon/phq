@@ -3,6 +3,7 @@ import { createReducer, on } from '@ngrx/store';
 import { BookmarksActions } from './bookmarks.actions';
 import { Bookmark } from '../models/bookmark';
 import { sampleBookmarks } from '../utils/bookmarks.sample-data.util';
+import { BookmarksUtils } from '../utils/bookmark.util';
 
 export const bookmarksFeatureKey = 'bookmarks';
 
@@ -13,7 +14,7 @@ export interface BookmarksState extends EntityState<Bookmark> {
 }
 
 export const bookmarksAdapter: EntityAdapter<Bookmark> = createEntityAdapter<Bookmark>({
-  sortComparer: (a, b) => b.createdAt.getTime() - a.createdAt.getTime(), // DESC order
+  sortComparer: BookmarksUtils.compareByDates,
   selectId: (bookmark) => bookmark.id, // Explicitly set the `id` field as the key
 });
 export const initialState: BookmarksState = bookmarksAdapter.getInitialState({

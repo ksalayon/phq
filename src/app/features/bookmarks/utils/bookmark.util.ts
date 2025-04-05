@@ -82,4 +82,31 @@ export class BookmarksUtils {
       modifiedAt: vm.modifiedAt ? new Date(vm.modifiedAt) : undefined, // Handle undefined for modifiedAt
     };
   }
+
+  /**
+   * Compare two objects with `createdAt` and `modifiedAt` fields to sort them
+   * in descending order of `createdAt`. If `createdAt` is the same, sort by
+   * `modifiedAt` in descending order.
+   *
+   * @param a - The first object to compare.
+   * @param b - The second object to compare.
+   * @returns A negative number if `b` should come before `a`, a positive number if `a` should come before `b`, or 0 if they are equal.
+   */
+  public static compareByDates<T extends { createdAt: Date; modifiedAt?: Date }>(
+    a: T,
+    b: T
+  ): number {
+    // Compare `createdAt` in descending order
+    const createdAtComparison = b.createdAt.getTime() - a.createdAt.getTime();
+
+    // If `createdAt` is the same, compare `modifiedAt` in descending order
+    if (createdAtComparison === 0) {
+      const modifiedAtB = b.modifiedAt ? b.modifiedAt.getTime() : 0; // Default to 0 if undefined
+      const modifiedAtA = a.modifiedAt ? a.modifiedAt.getTime() : 0; // Default to 0 if undefined
+      return modifiedAtB - modifiedAtA;
+    }
+
+    // Otherwise, use the `createdAt` comparison
+    return createdAtComparison;
+  }
 }

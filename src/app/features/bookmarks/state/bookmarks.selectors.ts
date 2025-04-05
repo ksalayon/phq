@@ -1,6 +1,7 @@
 import { createFeatureSelector, createSelector } from '@ngrx/store';
 import { BookmarksState } from './bookmarks.reducer';
 import { Bookmark } from '../models/bookmark';
+import { BookmarksUtils } from '../utils/bookmark.util';
 
 export const selectBookmarksState = createFeatureSelector<BookmarksState>('bookmarks');
 
@@ -9,7 +10,7 @@ export const selectAllBookmarks = createSelector(
   (state) =>
     Object.values(state.entities)
       .filter((bookmark): bookmark is Bookmark => !!bookmark)
-      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime()) as Bookmark[]
+      .sort(BookmarksUtils.compareByDates) as Bookmark[]
 );
 
 // export const selectBookmarkGroups = createSelector(selectBookmarksState, (state) => state.groups);
