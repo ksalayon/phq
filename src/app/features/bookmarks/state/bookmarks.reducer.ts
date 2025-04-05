@@ -43,6 +43,7 @@ export const bookmarksReducer = createReducer(
       ...state,
       loading: true,
       isSubmitting: true,
+      error: null,
     };
   }),
   on(BookmarksActions.createBookmarkSuccess, (state, { bookmark }) => {
@@ -51,6 +52,7 @@ export const bookmarksReducer = createReducer(
       ...bookmarksAdapter.addOne(bookmark, state),
       loading: false, // Ensure loading and isSubmitting flags are reset to false after success
       isSubmitting: false,
+      error: null,
     };
   }),
   on(BookmarksActions.createBookmarkFailure, (state, { error }) => ({

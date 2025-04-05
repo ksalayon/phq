@@ -40,6 +40,7 @@ export class BookmarkFormComponent implements OnInit {
   @Input() bookmark?: Bookmark;
   @Input({ required: true }) isLoading$!: Observable<boolean>;
   @Output() formSubmitted = new EventEmitter<UpdateBookmarkPayload>();
+  @Input() error$?: Observable<string | null>;
 
   form!: FormGroup;
   destroyRef = inject(DestroyRef);

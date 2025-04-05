@@ -9,7 +9,7 @@ import {
   selectError,
   selectIsSubmitting,
 } from '../../state/bookmarks.selectors';
-import { BehaviorSubject, withLatestFrom } from 'rxjs';
+import { BehaviorSubject, Subject, withLatestFrom } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 @Component({
@@ -29,6 +29,8 @@ export class BookmarksPageComponent implements OnInit {
   isFormSubmitting$ = this.isFormSubmittingSubject$.asObservable();
 
   bookmarks$ = this.store.select(selectAllBookmarks);
+  bookmarkErrorSubject$: Subject<string | null> | undefined = new Subject<string | null>();
+  bookmarkError$ = this.bookmarkErrorSubject$?.asObservable();
   destroyRef = inject(DestroyRef);
 
   ngOnInit() {
@@ -36,7 +38,12 @@ export class BookmarksPageComponent implements OnInit {
       .select(selectIsSubmitting)
       .pipe(takeUntilDestroyed(this.destroyRef), withLatestFrom(this.store.select(selectError)))
       .subscribe(([isSubmitting, error]) => {
+        console.log('error', error);
+        console.log('isSubmitting', isSubmitting);
         this.isFormSubmittingSubject$.next(isSubmitting);
+        if (!isSubmitting) {
+          this?.bookmarkErrorSubject$?.next(error);
+        }
       });
   }
 

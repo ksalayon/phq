@@ -1,6 +1,7 @@
 <phq-bookmark-form
   (formSubmitted)="onFormSubmit($event)"
-  [isLoading$]="isFormSubmitting$">
+  [isLoading$]="isFormSubmitting$"
+  [error$]="bookmarkError$">
 </phq-bookmark-form>
 
 <div class="bookmarks__list">
