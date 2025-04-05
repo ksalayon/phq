@@ -1,0 +1,17 @@
+.table-container {
+  position: relative;
+  max-height: 80vh;
+  overflow: auto;
+
+  table {
+    width: 100%;
+  }
+
+  .sticky-paginator {
+    position: sticky;
+    bottom: 0;
+    z-index: 1000;
+    background: white; // or use your surface color
+    border-top: 1px solid #e0e0e0;
+  }
+}
