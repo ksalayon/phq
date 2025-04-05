@@ -86,11 +86,11 @@ export class BookmarksTableComponent implements AfterViewInit, OnInit {
   }
 
   onEdit(row: VMBookmark) {
-    console.log('Edit', row);
+    this.editBookmark.emit(row);
   }
 
   onDelete(row: VMBookmark) {
-    console.log('Delete', row);
+    this.deleteBookmark.emit(row);
   }
 
   onVisit(row: VMBookmark) {

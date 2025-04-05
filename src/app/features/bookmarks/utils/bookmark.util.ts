@@ -57,4 +57,29 @@ export class BookmarksUtils {
       modifiedAt: bm?.modifiedAt?.toLocaleString() || '', // Handle optional modifiedAt field
     }));
   }
+
+  public static transformVMToBookmarks(
+    vmBookmarks: VMBookmark | VMBookmark[]
+  ): Bookmark | Bookmark[] {
+    if (Array.isArray(vmBookmarks)) {
+      // Handle array of VMBookmark objects
+      return vmBookmarks.map((vm) => BookmarksUtils.transformSingleVMToBookmark(vm));
+    }
+
+    // Handle single VMBookmark object
+    return BookmarksUtils.transformSingleVMToBookmark(vmBookmarks);
+  }
+
+  /**
+   * Handles the transformation of a single VMBookmark to Bookmark.
+   * @param vm - The VMBookmark object to convert.
+   * @returns A single Bookmark object.
+   */
+  public static transformSingleVMToBookmark(vm: VMBookmark): Bookmark {
+    return {
+      ...vm, // Spread all other properties from VMBookmark
+      createdAt: new Date(vm.createdAt), // Convert createdAt back to a Date object
+      modifiedAt: vm.modifiedAt ? new Date(vm.modifiedAt) : undefined, // Handle undefined for modifiedAt
+    };
+  }
 }

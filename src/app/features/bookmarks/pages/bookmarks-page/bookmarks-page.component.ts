@@ -11,6 +11,9 @@ import {
 } from '../../state/bookmarks.selectors';
 import { BehaviorSubject, Subject, withLatestFrom } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { VMBookmark } from '../../components/bookmarks-table/bookmarks-table.models';
+import { ModalService } from '../../../../shared/services/modal-dialog.service';
+import { BookmarksUtils } from '../../utils/bookmark.util';
 
 @Component({
   standalone: true,
@@ -31,7 +34,10 @@ export class BookmarksPageComponent implements OnInit {
   bookmarks$ = this.store.select(selectAllBookmarks);
   bookmarkErrorSubject$: Subject<string | null> | undefined = new Subject<string | null>();
   bookmarkError$ = this.bookmarkErrorSubject$?.asObservable();
+
   destroyRef = inject(DestroyRef);
+  // modal service from shared directory
+  modalService = inject(ModalService);
 
   ngOnInit() {
     this.store
@@ -50,5 +56,31 @@ export class BookmarksPageComponent implements OnInit {
   onFormSubmit($event: CreateBookmarkPayload) {
     console.log('onFormSubmit', $event);
     this.store.dispatch(BookmarksActions.createBookmark({ payload: $event }));
+  }
+
+  // Handle bookmark deletion
+  onDeleteBookmark(bookmark: VMBookmark) {
+    console.log('onDeleteBookmark', bookmark);
+  }
+
+  onEditBookmark(bookmark: VMBookmark) {
+    console.log('onEditBookmark', bookmark);
+    this.modalService.open(BookmarkFormComponent, {
+      inputs: {
+        bookmark: BookmarksUtils.transformSingleVMToBookmark(bookmark),
+        isLoading$: this.isFormSubmitting$,
+        error$: this.bookmarkError$,
+      },
+      outputs: {
+        submitted: (data) => {
+          console.log('Received:', data); // typed as string
+          this.modalService.close();
+        },
+        closed: () => {
+          console.log('Modal closed');
+          this.modalService.close();
+        },
+      },
+    });
   }
 }

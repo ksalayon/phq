@@ -6,7 +6,9 @@
 
 <div class="bookmarks__list">
   <phq-bookmarks-table
-    [bookmarks$]="bookmarks$">
+    [bookmarks$]="bookmarks$"
+    (deleteBookmark)="onDeleteBookmark($event)"
+    (editBookmark)="onEditBookmark($event)">
   </phq-bookmarks-table>
 </div>
 

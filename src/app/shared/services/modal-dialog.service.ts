@@ -29,7 +29,7 @@ export class ModalService {
   ) {
     const modalEl = document.createElement('phq-modal');
     document.body.appendChild(modalEl);
-
+    console.log('modalEl', modalEl);
     const compRef = this.appRef.bootstrap(ModalDialogComponent, modalEl);
     compRef.instance.onClose = () => this.close();
 
