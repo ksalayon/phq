@@ -77,7 +77,8 @@ export class BookmarksPageComponent implements OnInit {
       },
       outputs: {
         submitted: (data) => {
-          console.log('Received:', data); // typed as string
+          // dispatch event to update bookmark
+          this.store.dispatch(BookmarksActions.updateBookmark({ payload: data }));
           this.modalService.close();
         },
         closed: () => {

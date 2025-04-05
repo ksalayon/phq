@@ -14,9 +14,10 @@ export interface BookmarksState extends EntityState<Bookmark> {
 
 export const bookmarksAdapter: EntityAdapter<Bookmark> = createEntityAdapter<Bookmark>({
   sortComparer: (a, b) => b.createdAt.getTime() - a.createdAt.getTime(), // DESC order
+  selectId: (bookmark) => bookmark.id, // Explicitly set the `id` field as the key
 });
 export const initialState: BookmarksState = bookmarksAdapter.getInitialState({
-  entities: sampleBookmarks,
+  ...bookmarksAdapter.addMany(sampleBookmarks, bookmarksAdapter.getInitialState()),
   error: null,
   loading: false,
   isSubmitting: false,
@@ -60,17 +61,35 @@ export const bookmarksReducer = createReducer(
     error,
     loading: false,
     isSubmitting: false,
-  }))
+  })),
 
   // Update Bookmark
-  // on(BookmarksActions.updateBookmarkSuccess, (state, { changes }) =>
-  //   bookmarksAdapter.updateOne({ id: changes.id, changes }, state)
-  // ),
-  // on(BookmarksActions.updateBookmarkFailure, (state, { error }) => ({
-  //   ...state,
-  //   error,
-  // })),
-  //
+  on(BookmarksActions.updateBookmark, (state, { payload }) => {
+    return {
+      ...state,
+      loading: true,
+      isSubmitting: true,
+      error: null,
+    };
+  }),
+  on(BookmarksActions.updateBookmarkSuccess, (state, { changes }) => {
+    return {
+      ...bookmarksAdapter.updateOne(
+        { id: changes.id, changes: { ...changes, modifiedAt: new Date() } }, // update modifiedAt to current time
+        state
+      ),
+      loading: false, // Ensure loading and isSubmitting flags are reset to false after success
+      isSubmitting: false,
+      error: null,
+    };
+  }),
+  on(BookmarksActions.updateBookmarkFailure, (state, { error }) => ({
+    ...state,
+    error,
+    loading: false,
+    isSubmitting: false,
+  }))
+
   // // Delete Bookmark
   // on(BookmarksActions.deleteBookmarkSuccess, (state, { id }) =>
   //   bookmarksAdapter.removeOne(id, state)

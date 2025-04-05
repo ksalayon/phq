@@ -20,7 +20,7 @@ export class BookmarkService {
   }
 
   updateBookmark(bookmark: UpdateBookmarkPayload) {
-    return of(bookmark);
+    return of(bookmark as Bookmark);
   }
 
   deleteBookmark(id: Bookmark['id']) {
