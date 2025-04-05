@@ -1,7 +1,9 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  DestroyRef,
   EventEmitter,
+  inject,
   Input,
   OnInit,
   Output,
@@ -16,6 +18,7 @@ import { MatButton } from '@angular/material/button';
 import { CommonModule } from '@angular/common';
 import { MatProgressSpinner } from '@angular/material/progress-spinner';
 import { Observable } from 'rxjs';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 @Component({
   standalone: true,
@@ -39,6 +42,7 @@ export class BookmarkFormComponent implements OnInit {
   @Output() formSubmitted = new EventEmitter<UpdateBookmarkPayload>();
 
   form!: FormGroup;
+  destroyRef = inject(DestroyRef);
 
   constructor(private fb: FormBuilder) {}
 
@@ -57,7 +61,7 @@ export class BookmarkFormComponent implements OnInit {
     }
 
     // Generate description dynamically based on URL changes
-    this.urlControl?.valueChanges.subscribe((url) => {
+    this.urlControl?.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((url) => {
       const name = BookmarksUtils.generateDefaultDescription(url);
       this.form.patchValue({ name }, { emitEvent: false });
     });

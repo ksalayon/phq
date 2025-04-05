@@ -2,7 +2,9 @@ import {
   AfterViewInit,
   ChangeDetectionStrategy,
   Component,
+  DestroyRef,
   inject,
+  Input,
   OnInit,
   ViewChild,
 } from '@angular/core';
@@ -10,8 +12,9 @@ import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
 import { CommonModule } from '@angular/common';
 import { VMBookmark } from './bookmarks-table.models';
-import { Store } from '@ngrx/store';
-import { selectAllBookmarks } from '../../state/bookmarks.selectors';
+import { Bookmark } from '../../models/bookmark';
+import { Observable } from 'rxjs';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 @Component({
   standalone: true,
@@ -31,7 +34,9 @@ export class BookmarksTableComponent implements AfterViewInit, OnInit {
 
   @ViewChild(MatPaginator) paginator!: MatPaginator;
 
-  private store = inject(Store);
+  @Input({ required: true }) bookmarks$!: Observable<Bookmark[]>;
+
+  private destroyRef = inject(DestroyRef);
 
   constructor() {
     // Initialize dataSource with the sample data
@@ -39,7 +44,11 @@ export class BookmarksTableComponent implements AfterViewInit, OnInit {
   }
 
   ngOnInit(): void {
-    this.store.select(selectAllBookmarks).subscribe((bookmarks) => {
+    this.monitorBookmarks();
+  }
+
+  private monitorBookmarks() {
+    this.bookmarks$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((bookmarks) => {
       this.dataSource = new MatTableDataSource<VMBookmark>(
         bookmarks.map((bm) => ({
           ...bm,

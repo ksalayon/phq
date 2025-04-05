@@ -1,11 +1,16 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, inject, OnInit } from '@angular/core';
 import { BookmarkFormComponent } from '../../components/bookmark-form/bookmark-form.component';
 import { CreateBookmarkPayload } from '../../models/bookmark';
 import { Store } from '@ngrx/store';
 import { BookmarksActions } from '../../state/bookmarks.actions';
 import { BookmarksTableComponent } from '../../components/bookmarks-table/bookmarks-table.component';
-import { selectError, selectIsSubmitting } from '../../state/bookmarks.selectors';
+import {
+  selectAllBookmarks,
+  selectError,
+  selectIsSubmitting,
+} from '../../state/bookmarks.selectors';
 import { BehaviorSubject, withLatestFrom } from 'rxjs';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 @Component({
   standalone: true,
@@ -16,18 +21,20 @@ import { BehaviorSubject, withLatestFrom } from 'rxjs';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class BookmarksPageComponent implements OnInit {
-  constructor(
-    private store: Store,
-    private cd: ChangeDetectorRef
-  ) {}
+  private store = inject(Store);
+
+  constructor() {}
 
   isFormSubmittingSubject$: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(false);
   isFormSubmitting$ = this.isFormSubmittingSubject$.asObservable();
 
+  bookmarks$ = this.store.select(selectAllBookmarks);
+  destroyRef = inject(DestroyRef);
+
   ngOnInit() {
     this.store
       .select(selectIsSubmitting)
-      .pipe(withLatestFrom(this.store.select(selectError)))
+      .pipe(takeUntilDestroyed(this.destroyRef), withLatestFrom(this.store.select(selectError)))
       .subscribe(([isSubmitting, error]) => {
         this.isFormSubmittingSubject$.next(isSubmitting);
       });
