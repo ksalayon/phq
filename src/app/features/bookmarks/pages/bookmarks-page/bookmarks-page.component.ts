@@ -3,11 +3,12 @@ import { BookmarkFormComponent } from '../../components/bookmark-form/bookmark-f
 import { CreateBookmarkPayload } from '../../models/bookmark';
 import { Store } from '@ngrx/store';
 import { BookmarksActions } from '../../state/bookmarks.actions';
+import { BookmarksTableComponent } from '../../components/bookmarks-table/bookmarks-table.component';
 
 @Component({
   standalone: true,
   selector: 'phq-bookmarks-page',
-  imports: [BookmarkFormComponent],
+  imports: [BookmarkFormComponent, BookmarksTableComponent],
   templateUrl: './bookmarks-page.component.html',
   styleUrl: './bookmarks-page.component.css',
 })
