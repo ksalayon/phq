@@ -6,13 +6,23 @@ function getRandomPastDate(daysBack: number): Date {
   return new Date(randomTimestamp); // Convert to Date object
 }
 
-export const sampleBookmarks: Bookmark[] = Array.from({ length: 100 }, (_, index) => ({
-  id: crypto.randomUUID(), // Assigning unique IDs starting from 1
-  name: `Sample Bookmark ${index + 1}`,
-  url: `https://example.com/bookmark-${index + 1}`,
-  createdAt: getRandomPastDate(3),
-  modifiedAt: new Date(
+export const sampleBookmarks: Bookmark[] = Array.from({ length: 100 }, (_, index) => {
+  const createdAt = getRandomPastDate(3); // Random past date
+  let modifiedAt = new Date(
     new Date().setDate(new Date().getDate() + Math.floor(Math.random() * 10) + 11)
-  ),
-  bookmarkGroupId: 'default',
-}));
+  );
+
+  // Ensure modifiedAt is not in the future
+  if (modifiedAt > new Date()) {
+    modifiedAt = new Date(); // Set to the current time if it's in the future
+  }
+
+  return {
+    id: crypto.randomUUID(),
+    name: `Sample Bookmark ${index + 1}`,
+    url: `https://example.com/bookmark-${index + 1}`,
+    createdAt,
+    modifiedAt,
+    bookmarkGroupId: 'default',
+  };
+});
