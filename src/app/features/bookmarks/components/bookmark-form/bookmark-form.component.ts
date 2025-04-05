@@ -58,21 +58,31 @@ export class BookmarkFormComponent implements OnInit {
       url: ['', [Validators.required, BookmarksUtils.urlValidator()]],
       name: [''],
     });
-
+    console.log('form this.bookmark', this.bookmark);
     if (this.bookmark) {
-      this.form.patchValue({ url: this.bookmark.url });
+      this.form.patchValue({
+        url: this.bookmark.url,
+        name: this.bookmark.name,
+      });
     }
 
-    // Generate description dynamically based on URL changes
-    this.urlControl?.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((url) => {
-      const name = BookmarksUtils.generateDefaultDescription(url);
-      this.form.patchValue({ name }, { emitEvent: false });
-    });
+    // Generate description only when creating a new bookmark
+    if (!this.bookmark) {
+      this.urlControl?.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((url) => {
+        const name = BookmarksUtils.generateDefaultDescription(url);
+        this.form.patchValue({ name }, { emitEvent: false });
+      });
+    }
   }
 
   onSubmit(): void {
     if (this.form.valid) {
-      this.formSubmitted.emit(this.form.value); //  Emit form submission event
+      // This is used to differentiate between a create and update payload
+      const payload: UpdateBookmarkPayload = {
+        ...(this.bookmark?.id ? { id: this.bookmark.id } : {}),
+        ...this.form.value,
+      };
+      this.formSubmitted.emit(payload); //  Emit form submission event
       this.form.reset();
       this.form.markAsPristine();
       this.form.markAsUntouched(); // Ensure the form is "reset" visually

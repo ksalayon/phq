@@ -32,33 +32,34 @@ export class ModalService {
     console.log('modalEl', modalEl);
     const compRef = this.appRef.bootstrap(ModalDialogComponent, modalEl);
     compRef.instance.onClose = () => this.close();
-
-    const injector = this.createInjector(options?.inputs);
+    
+    const injector = this.createInjector();
     compRef.instance.attachComponent(component, injector);
 
-    // Handle outputs safely
+    // After portal attached
     const attachedRef = compRef.instance.outlet.attachedRef;
     if (attachedRef && 'instance' in attachedRef) {
       const embeddedComp = attachedRef.instance as T;
-      for (const [key, handler] of Object.entries(options?.outputs ?? {})) {
+
+      // ✅ Programmatically set @Input()s
+      Object.entries(options?.inputs ?? {}).forEach(([key, value]) => {
+        (embeddedComp as any)[key] = value;
+      });
+
+      // ✅ Wire up @Output()s
+      Object.entries(options?.outputs ?? {}).forEach(([key, handler]) => {
         const output = (embeddedComp as any)[key];
         if (output?.subscribe) {
           output.subscribe(handler);
         }
-      }
+      });
     }
 
     this.modalRef = compRef;
   }
 
-  private createInjector<T>(inputs?: Partial<T>): Injector {
-    return Injector.create({
-      providers: Object.entries(inputs || {}).map(([key, value]) => ({
-        provide: key,
-        useValue: value,
-      })),
-      parent: this.envInjector,
-    });
+  private createInjector(): Injector {
+    return this.envInjector;
   }
 
   close() {

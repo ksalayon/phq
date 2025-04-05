@@ -65,6 +65,10 @@ export class BookmarksPageComponent implements OnInit {
 
   onEditBookmark(bookmark: VMBookmark) {
     console.log('onEditBookmark', bookmark);
+    console.log(
+      'BookmarksUtils.transformSingleVMToBookmark(bookmark)',
+      BookmarksUtils.transformSingleVMToBookmark(bookmark)
+    );
     this.modalService.open(BookmarkFormComponent, {
       inputs: {
         bookmark: BookmarksUtils.transformSingleVMToBookmark(bookmark),
