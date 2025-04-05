@@ -1,18 +1,41 @@
-import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  EventEmitter,
+  Input,
+  OnInit,
+  Output,
+} from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Bookmark, UpdateBookmarkPayload } from '../../models/bookmark';
-import { NgIf } from '@angular/common';
 import { BookmarksUtils } from '../../utils';
+import { MatIcon } from '@angular/material/icon';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatButton } from '@angular/material/button';
+import { CommonModule } from '@angular/common';
+import { MatProgressSpinner } from '@angular/material/progress-spinner';
+import { Observable } from 'rxjs';
 
 @Component({
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'phq-bookmark-form',
   styleUrls: ['./bookmark-form.component.scss'],
   templateUrl: './bookmark-form.component.html',
-  imports: [ReactiveFormsModule, NgIf],
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    MatFormFieldModule,
+    MatIcon,
+    MatInputModule,
+    MatButton,
+    MatProgressSpinner,
+  ],
 })
 export class BookmarkFormComponent implements OnInit {
   @Input() bookmark?: Bookmark;
+  @Input({ required: true }) isLoading$!: Observable<boolean>;
   @Output() formSubmitted = new EventEmitter<UpdateBookmarkPayload>();
 
   form!: FormGroup;
@@ -25,7 +48,7 @@ export class BookmarkFormComponent implements OnInit {
 
   ngOnInit(): void {
     this.form = this.fb.group({
-      url: ['', [Validators.required, Validators.pattern(/https?:\/\/.+/)]],
+      url: ['', [Validators.required, BookmarksUtils.urlValidator()]],
       name: [''],
     });
 
@@ -42,7 +65,11 @@ export class BookmarkFormComponent implements OnInit {
 
   onSubmit(): void {
     if (this.form.valid) {
-      this.formSubmitted.emit(this.form.value);
+      this.formSubmitted.emit(this.form.value); //  Emit form submission event
+      this.form.reset();
+      this.form.markAsPristine();
+      this.form.markAsUntouched(); // Ensure the form is "reset" visually
+      this.form.updateValueAndValidity(); // Re-evaluate validity after reset
     }
   }
 }

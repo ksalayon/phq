@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component } from '@angular/core';
 
 @Component({
   standalone: true,
@@ -6,5 +6,6 @@ import { Component } from '@angular/core';
   imports: [],
   templateUrl: './base-form.component.html',
   styleUrl: './base-form.component.css',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class BaseFormComponent {}

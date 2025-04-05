@@ -9,13 +9,17 @@ export const bookmarksFeatureKey = 'bookmarks';
 export interface BookmarksState extends EntityState<Bookmark> {
   error: string | null;
   loading: boolean;
+  isSubmitting: boolean;
 }
 
-export const bookmarksAdapter: EntityAdapter<Bookmark> = createEntityAdapter<Bookmark>();
+export const bookmarksAdapter: EntityAdapter<Bookmark> = createEntityAdapter<Bookmark>({
+  sortComparer: (a, b) => b.createdAt.getTime() - a.createdAt.getTime(), // DESC order
+});
 export const initialState: BookmarksState = bookmarksAdapter.getInitialState({
   entities: sampleBookmarks,
   error: null,
   loading: false,
+  isSubmitting: false,
 });
 
 export const bookmarksReducer = createReducer(
@@ -33,13 +37,27 @@ export const bookmarksReducer = createReducer(
   // })),
 
   // Create Bookmark
+  on(BookmarksActions.createBookmark, (state, { payload }) => {
+    console.log('BookmarksActions.createBookmark', payload);
+    return {
+      ...state,
+      loading: true,
+      isSubmitting: true,
+    };
+  }),
   on(BookmarksActions.createBookmarkSuccess, (state, { bookmark }) => {
     console.log('createBookmarkSuccess$', bookmark);
-    return bookmarksAdapter.addOne(bookmark, state);
+    return {
+      ...bookmarksAdapter.addOne(bookmark, state),
+      loading: false, // Ensure loading and isSubmitting flags are reset to false after success
+      isSubmitting: false,
+    };
   }),
   on(BookmarksActions.createBookmarkFailure, (state, { error }) => ({
     ...state,
     error,
+    loading: false,
+    isSubmitting: false,
   }))
 
   // Update Bookmark

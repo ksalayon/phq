@@ -1,3 +1,5 @@
+import { AbstractControl, ValidationErrors, ValidatorFn } from '@angular/forms';
+
 export class BookmarksUtils {
   public static generateDefaultDescription(url: string): string {
     try {
@@ -22,5 +24,27 @@ export class BookmarksUtils {
       // Return a default fallback if URL is invalid
       return 'Default description';
     }
+  }
+
+  /**
+   * Used for form definitions and provides custom form input validation for fields accepting URL's
+   * e.g.
+   * this.form = this.fb.group({
+   *      url: ['', [Validators.required, urlValidator()]], // Add the custom validator
+   *    });
+   */
+  public static urlValidator(): ValidatorFn {
+    return (control: AbstractControl): ValidationErrors | null => {
+      const value = control.value;
+
+      // Passes validation if the field is empty
+      if (!value) {
+        return null;
+      }
+
+      // Validate URL format otherwise
+      const urlPattern = /https?:\/\/.+/;
+      return urlPattern.test(value) ? null : { invalidUrl: true };
+    };
   }
 }

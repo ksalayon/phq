@@ -1,0 +1,11 @@
+form {
+  display: flex;
+  flex-direction: row;
+  gap: 10px;
+  align-items: center;
+  margin: 10px;
+
+  button {
+    margin-bottom: 20px; // To vertically align button alongside input with hidden spaces below for error messages
+  }
+}

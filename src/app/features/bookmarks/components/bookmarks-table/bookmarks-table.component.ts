@@ -1,4 +1,11 @@
-import { AfterViewInit, Component, inject, OnInit, ViewChild } from '@angular/core';
+import {
+  AfterViewInit,
+  ChangeDetectionStrategy,
+  Component,
+  inject,
+  OnInit,
+  ViewChild,
+} from '@angular/core';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
 import { CommonModule } from '@angular/common';
@@ -16,6 +23,7 @@ import { selectAllBookmarks } from '../../state/bookmarks.selectors';
     MatTableModule, // Provides mat-table related directives
     MatPaginatorModule, // Provides paginator functionality
   ],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class BookmarksTableComponent implements AfterViewInit, OnInit {
   displayedColumns: string[] = ['name', 'url', 'bookmarkGroupId', 'createdAt', 'modifiedAt'];

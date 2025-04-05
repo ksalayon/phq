@@ -1,22 +1,27 @@
 <form [formGroup]="form" (ngSubmit)="onSubmit()">
-  <label for="url">Bookmark URL</label>
-  <input
-    id="url"
-    type="url"
-    formControlName="url"
-    placeholder="https://example.com"
-  />
-  <input
-    id="name"
-    type="text"
-    formControlName="name"
-    placeholder="URL description"
-  />
-  <div *ngIf="urlControl?.invalid && urlControl?.dirty">
-    <small class="error">A valid URL is required.</small>
-  </div>
-
-  <button type="submit" [disabled]="form.invalid">
+  <mat-form-field>
+    <mat-label>Bookmark URL</mat-label>
+    <input
+      matInput
+      placeholder="Enter URL"
+      formControlName="url"
+      required
+    />
+    <mat-error *ngIf="form.get('url')?.hasError('required') && !form.get('url')?.pristine">Url is required</mat-error>
+    <mat-error *ngIf="form.get('url')?.hasError('invalidUrl')">URL is not valid
+    </mat-error>
+  </mat-form-field>
+  <mat-form-field>
+    <mat-label>Bookmark description</mat-label>
+    <input
+      matInput
+      placeholder=""
+      formControlName="name"
+    />
+    <mat-icon matSuffix>description</mat-icon>
+  </mat-form-field>
+  <button mat-flat-button type="submit" [disabled]="form.invalid">
     {{ bookmark ? 'Update' : 'Add' }} Bookmark
   </button>
+  <mat-progress-spinner *ngIf="isLoading$ | async" mode="indeterminate"></mat-progress-spinner>
 </form>
