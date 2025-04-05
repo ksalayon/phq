@@ -1,4 +1,6 @@
 import { AbstractControl, ValidationErrors, ValidatorFn } from '@angular/forms';
+import { Bookmark } from '../models/bookmark';
+import { VMBookmark } from '../components/bookmarks-table/bookmarks-table.models';
 
 export class BookmarksUtils {
   public static generateDefaultDescription(url: string): string {
@@ -46,5 +48,13 @@ export class BookmarksUtils {
       const urlPattern = /https?:\/\/.+/;
       return urlPattern.test(value) ? null : { invalidUrl: true };
     };
+  }
+
+  public static transformBookmarksToVM(bookmarks: Bookmark[]): VMBookmark[] {
+    return bookmarks.map((bm) => ({
+      ...bm, // Spread all other properties from Bookmark
+      createdAt: bm.createdAt.toLocaleString(), // Convert createdAt to a formatted string
+      modifiedAt: bm?.modifiedAt?.toLocaleString() || '', // Handle optional modifiedAt field
+    }));
   }
 }

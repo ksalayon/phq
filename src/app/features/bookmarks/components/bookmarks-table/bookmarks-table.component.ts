@@ -3,9 +3,11 @@ import {
   ChangeDetectionStrategy,
   Component,
   DestroyRef,
+  EventEmitter,
   inject,
   Input,
   OnInit,
+  Output,
   ViewChild,
 } from '@angular/core';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
@@ -19,6 +21,7 @@ import { MatMenu, MatMenuItem, MatMenuTrigger } from '@angular/material/menu';
 import { MatIcon } from '@angular/material/icon';
 import { MatIconButton } from '@angular/material/button';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { BookmarksUtils } from '../../utils/bookmark.util';
 
 @Component({
   standalone: true,
@@ -52,6 +55,11 @@ export class BookmarksTableComponent implements AfterViewInit, OnInit {
 
   @Input({ required: true }) bookmarks$!: Observable<Bookmark[]>;
 
+  // Emit an "Edit" event
+  @Output() editBookmark = new EventEmitter<VMBookmark>();
+  // Emit a delete event
+  @Output() deleteBookmark = new EventEmitter<VMBookmark>();
+
   private destroyRef = inject(DestroyRef);
   private snackBar = inject(MatSnackBar);
 
@@ -67,11 +75,7 @@ export class BookmarksTableComponent implements AfterViewInit, OnInit {
   private monitorBookmarks() {
     this.bookmarks$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((bookmarks) => {
       this.dataSource = new MatTableDataSource<VMBookmark>(
-        bookmarks.map((bm) => ({
-          ...bm,
-          createdAt: bm.createdAt.toLocaleString(),
-          modifiedAt: bm?.modifiedAt?.toLocaleString(),
-        }))
+        BookmarksUtils.transformBookmarksToVM(bookmarks)
       );
       this.dataSource.paginator = this.paginator;
     });
@@ -81,11 +85,11 @@ export class BookmarksTableComponent implements AfterViewInit, OnInit {
     this.dataSource.paginator = this.paginator;
   }
 
-  onEdit(row: any) {
+  onEdit(row: VMBookmark) {
     console.log('Edit', row);
   }
 
-  onDelete(row: any) {
+  onDelete(row: VMBookmark) {
     console.log('Delete', row);
   }
 
