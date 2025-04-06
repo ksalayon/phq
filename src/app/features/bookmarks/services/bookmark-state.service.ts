@@ -1,28 +1,19 @@
-import { inject, Injectable } from '@angular/core';
-import { filter, Observable, take, withLatestFrom } from 'rxjs';
-import { Store } from '@ngrx/store';
-import { selectError, selectIsSubmitting } from '../state/bookmarks.selectors';
-import { map } from 'rxjs/operators';
+import { Injectable } from '@angular/core';
+import { Observable, Subject } from 'rxjs';
 
 @Injectable()
 export class BookmarkStateService {
-  store = inject(Store);
+  private submissionSubject = new Subject<{ success: boolean; error?: string; id?: string }>();
 
-  /**
-   * Listens to submission state and error, returns an observable that emits
-   * when the process completes.
-   *
-   * @return {Observable<{ success: boolean; error: string | null }>} Observable that emits on completion.
-   */
-  monitorSubmission(): Observable<{ success: boolean; error: string | null }> {
-    return this.store.select(selectIsSubmitting).pipe(
-      withLatestFrom(this.store.select(selectError)),
-      filter(([isSubmitting]) => !isSubmitting), // Wait until submission stops
-      take(1), // Take only one emission
-      map(([_, error]) => ({
-        success: !error,
-        error,
-      }))
-    );
+  monitorSubmission(): Observable<{ success: boolean; error?: string; id?: string }> {
+    return this.submissionSubject.asObservable();
+  }
+
+  signalSubmissionSuccess(id: string): void {
+    this.submissionSubject.next({ success: true, id });
+  }
+
+  signalSubmissionError(error: string): void {
+    this.submissionSubject.next({ success: false, error });
   }
 }

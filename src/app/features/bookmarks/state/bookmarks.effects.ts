@@ -6,12 +6,14 @@ import { BookmarkService } from '../services/bookmark.service';
 import { of } from 'rxjs';
 import { Store } from '@ngrx/store';
 import { selectAllBookmarks } from './bookmarks.selectors';
+import { BookmarkStateService } from '../services/bookmark-state.service';
 
 @Injectable()
 export class BookmarksEffects {
   private actions$ = inject(Actions);
   private bookmarkService = inject(BookmarkService);
   private store = inject(Store);
+  private bookmarkStateService = inject(BookmarkStateService);
 
   loadBookmark$ = createEffect(() =>
     this.actions$.pipe(
@@ -50,22 +52,30 @@ export class BookmarksEffects {
             );
 
             if (bookmarkExists) {
+              const errorMessage = 'Bookmark with the same URL already exists';
+              this.bookmarkStateService.signalSubmissionError(errorMessage);
               return of(
                 BookmarksActions.createBookmarkFailure({
-                  error: 'Bookmark with the same name already exists',
+                  error: errorMessage,
                 })
               );
             }
 
             return this.bookmarkService.createBookmark(action.payload).pipe(
-              map((bookmark) => BookmarksActions.createBookmarkSuccess({ bookmark })),
-              catchError((error) =>
-                of(
+              map((bookmark) => {
+                this.bookmarkStateService.signalSubmissionSuccess(bookmark.id);
+                return BookmarksActions.createBookmarkSuccess({ bookmark });
+              }),
+              catchError((error) => {
+                const errorMessage = error?.message || 'Bookmark creation failed';
+                this.bookmarkStateService.signalSubmissionError(errorMessage);
+
+                return of(
                   BookmarksActions.createBookmarkFailure({
-                    error: error?.message || 'Bookmark creation failed',
+                    error: errorMessage,
                   })
-                )
-              )
+                );
+              })
             );
           })
         )
@@ -99,22 +109,29 @@ export class BookmarksEffects {
             );
 
             if (bookmarkExists) {
+              const errorMessage = 'Bookmark with the same name already exists';
+              this.bookmarkStateService.signalSubmissionError(errorMessage);
               return of(
                 BookmarksActions.createBookmarkFailure({
-                  error: 'Bookmark with the same name already exists',
+                  error: errorMessage,
                 })
               );
             }
 
             return this.bookmarkService.updateBookmark(action.payload).pipe(
-              map((bookmark) => BookmarksActions.updateBookmarkSuccess({ changes: bookmark })),
-              catchError((error) =>
-                of(
+              map((bookmark) => {
+                this.bookmarkStateService.signalSubmissionSuccess(bookmark.id);
+                return BookmarksActions.updateBookmarkSuccess({ changes: bookmark });
+              }),
+              catchError((error) => {
+                const errorMessage = error?.message || 'Bookmark update failed';
+                this.bookmarkStateService.signalSubmissionError(errorMessage);
+                return of(
                   BookmarksActions.updateBookmarkFailure({
                     error: error?.message || 'Bookmark update failed',
                   })
-                )
-              )
+                );
+              })
             );
           })
         )
@@ -135,9 +152,14 @@ export class BookmarksEffects {
       ofType(BookmarksActions.deleteBookmark),
       mergeMap(({ id }) =>
         this.bookmarkService.deleteBookmark(id).pipe(
-          map((bookmark) => BookmarksActions.deleteBookmarkSuccess({ id })),
+          map(() => {
+            this.bookmarkStateService.signalSubmissionSuccess(id);
+            return BookmarksActions.deleteBookmarkSuccess({ id });
+          }),
           catchError(() => {
+            const errorMessage = 'Bookmark deletion failed';
             // TODO: Log to Raygun
+            this.bookmarkStateService.signalSubmissionError(errorMessage);
             return of(
               BookmarksActions.deleteBookmarkFailure({
                 error: 'Bookmark deletion failed',

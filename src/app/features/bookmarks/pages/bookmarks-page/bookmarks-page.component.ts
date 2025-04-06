@@ -11,6 +11,8 @@ import { ModalService } from '../../../../shared/services/modal-dialog.service';
 import { BookmarksUtils } from '../../utils/bookmark.util';
 import { ConfirmDeleteDialogComponent } from '../../components/confirm-delete-dialog/confirm-delete-dialog.component';
 import { BookmarkStateService } from '../../services/bookmark-state.service';
+import { Router } from '@angular/router';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 @Component({
   standalone: true,
@@ -19,7 +21,6 @@ import { BookmarkStateService } from '../../services/bookmark-state.service';
   templateUrl: './bookmarks-page.component.html',
   styleUrl: './bookmarks-page.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  providers: [BookmarkStateService],
 })
 export class BookmarksPageComponent implements OnInit {
   private store = inject(Store);
@@ -40,6 +41,7 @@ export class BookmarksPageComponent implements OnInit {
   // modal service from shared directory
   modalService = inject(ModalService);
   bookmarkStateService = inject(BookmarkStateService);
+  private router = inject(Router);
 
   ngOnInit() {}
 
@@ -51,13 +53,20 @@ export class BookmarksPageComponent implements OnInit {
    */
   onCreateBookmark($event: CreateBookmarkPayload): void {
     this.isFormSubmittingSubject$.next(true);
+    this.bookmarkStateService
+      .monitorSubmission()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(({ success, error, id }) => {
+        this.isFormSubmittingSubject$.next(false);
+        if (error) {
+          this?.bookmarkCreateErrorSubject$?.next(error);
+        }
+        if (success && id) {
+          // Redirect to the details page with the created ID
+          this.router.navigate([`/bookmarks/details/${id}`]).then();
+        }
+      });
     this.store.dispatch(BookmarksActions.createBookmark({ payload: $event }));
-    this.bookmarkStateService.monitorSubmission().subscribe(({ success, error }) => {
-      this.isFormSubmittingSubject$.next(false);
-      if (error) {
-        this?.bookmarkCreateErrorSubject$?.next(error);
-      }
-    });
   }
 
   // Handle bookmark deletion
@@ -71,13 +80,16 @@ export class BookmarksPageComponent implements OnInit {
           // dispatch event to delete bookmark
           this.store.dispatch(BookmarksActions.deleteBookmark({ id: data.id }));
           // Listen for success or failure
-          this.bookmarkStateService.monitorSubmission().subscribe(({ success, error }) => {
-            if (success) {
-              this.modalService.close(); // Close the modal on success
-            } else {
-              // TODO: Show snackbar error
-            }
-          });
+          this.bookmarkStateService
+            .monitorSubmission()
+            .pipe(takeUntilDestroyed(this.destroyRef))
+            .subscribe(({ success, error }) => {
+              if (success) {
+                this.modalService.close(); // Close the modal on success
+              } else {
+                // TODO: Show snackbar error
+              }
+            });
         },
         closed: () => {
           // Deletion cancelled
@@ -108,13 +120,16 @@ export class BookmarksPageComponent implements OnInit {
           this.store.dispatch(BookmarksActions.updateBookmark({ payload: data }));
 
           // Listen for success or failure
-          this.bookmarkStateService.monitorSubmission().subscribe(({ success, error }) => {
-            if (success) {
-              this.modalService.close(); // Close the modal on success
-            } else {
-              this.bookmarkUpdateErrorSubject$?.next(error);
-            }
-          });
+          this.bookmarkStateService
+            .monitorSubmission()
+            .pipe(takeUntilDestroyed(this.destroyRef))
+            .subscribe(({ success, error }) => {
+              if (success) {
+                this.modalService.close(); // Close the modal on success
+              } else if (error) {
+                this.bookmarkUpdateErrorSubject$?.next(error || 'Bookmark update failed');
+              }
+            });
         },
         closed: () => {
           this.modalService.close();

@@ -9,6 +9,7 @@ import {
 import { provideEffects } from '@ngrx/effects';
 import { BookmarksEffects } from './features/bookmarks/state/bookmarks.effects';
 import { BookmarksResolver } from './features/bookmarks/bookmarks.resolver';
+import { BookmarkStateService } from './features/bookmarks/services/bookmark-state.service';
 
 export const routes: Routes = [
   {
@@ -19,6 +20,7 @@ export const routes: Routes = [
     // to avoid duplicated instances
     providers: [
       BookmarkService,
+      BookmarkStateService,
       provideState({ name: bookmarksFeatureKey, reducer: bookmarksReducer }),
       provideEffects([BookmarksEffects]),
     ],
