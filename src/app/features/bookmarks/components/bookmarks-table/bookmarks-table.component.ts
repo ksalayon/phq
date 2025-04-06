@@ -20,8 +20,8 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MatMenu, MatMenuItem, MatMenuTrigger } from '@angular/material/menu';
 import { MatIcon } from '@angular/material/icon';
 import { MatIconButton } from '@angular/material/button';
-import { MatSnackBar } from '@angular/material/snack-bar';
 import { BookmarksUtils } from '../../utils/bookmark.util';
+import { SnackbarService } from '../../../../shared/services/snackbar.service';
 
 @Component({
   standalone: true,
@@ -59,7 +59,8 @@ export class BookmarksTableComponent implements AfterViewInit, OnInit {
   dataSource!: MatTableDataSource<VMBookmark>;
 
   private destroyRef = inject(DestroyRef);
-  private snackBar = inject(MatSnackBar);
+  // private snackBar = inject(MatSnackBar);
+  private snackbarService = inject(SnackbarService);
 
   constructor() {
     // Initialize dataSource with the sample data
@@ -92,9 +93,7 @@ export class BookmarksTableComponent implements AfterViewInit, OnInit {
 
   onCopy(row: VMBookmark) {
     navigator.clipboard.writeText(row.url).then((r) => {
-      this.snackBar.open('Successfully copied url', '', {
-        duration: 3000,
-      });
+      this.snackbarService.success('Successfully copied url');
     });
   }
 

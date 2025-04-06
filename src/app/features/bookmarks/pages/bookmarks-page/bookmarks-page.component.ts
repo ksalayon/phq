@@ -13,6 +13,7 @@ import { ConfirmDeleteDialogComponent } from '../../components/confirm-delete-di
 import { BookmarkStateService } from '../../services/bookmark-state.service';
 import { Router } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { SnackbarService } from '../../../../shared/services/snackbar.service';
 
 /**
  * BookmarksPageComponent is a container component that provides functionality for managing bookmarks.
@@ -37,6 +38,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
   templateUrl: './bookmarks-page.component.html',
   styleUrl: './bookmarks-page.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
+  providers: [SnackbarService],
 })
 export class BookmarksPageComponent implements OnInit {
   isFormSubmittingSubject$: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(false);
@@ -54,6 +56,7 @@ export class BookmarksPageComponent implements OnInit {
   private store = inject(Store);
 
   private router = inject(Router);
+  private snackbarService = inject(SnackbarService);
 
   /**
    * Retrieves an observable stream of all bookmarks from the store.
@@ -112,6 +115,7 @@ export class BookmarksPageComponent implements OnInit {
             .subscribe(({ success, error }) => {
               if (success) {
                 this.modalService.close(); // Close the modal on success
+                this.snackbarService.success(`Bookmark successfully deleted`);
               } else {
                 // TODO: Show snackbar error
               }
@@ -151,6 +155,7 @@ export class BookmarksPageComponent implements OnInit {
             .subscribe(({ success, error }) => {
               if (success) {
                 this.modalService.close(); // Close the modal on success
+                this.snackbarService.success(`Bookmark successfully updated`);
               } else if (error) {
                 this.bookmarkUpdateErrorSubject$?.next(error || 'Bookmark update failed');
               }
