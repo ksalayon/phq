@@ -1,0 +1,25 @@
+:host {
+  display: grid;
+  grid-template-rows: 50px auto; /* Top row for the back-button (50px), main content takes the rest */
+  grid-template-columns: 100%; /* Single-column layout */
+  height: 100vh;
+  width: 100%;
+}
+
+/* Top section for the back-button */
+.top-bar {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  padding-left: 16px;
+}
+
+/* Main content section */
+/* Content is centered vertically */
+.main-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  flex: 1 1 0;
+}

@@ -59,6 +59,7 @@ export class BookmarksTableComponent implements AfterViewInit, OnInit {
   @Output() editBookmark = new EventEmitter<VMBookmark>();
   // Emit a delete event
   @Output() deleteBookmark = new EventEmitter<VMBookmark>();
+  @Output() viewBookmark = new EventEmitter<VMBookmark>();
 
   private destroyRef = inject(DestroyRef);
   private snackBar = inject(MatSnackBar);
@@ -95,6 +96,10 @@ export class BookmarksTableComponent implements AfterViewInit, OnInit {
 
   onVisit(row: VMBookmark) {
     window.open(`${row.url}`, '_blank');
+  }
+
+  onView(row: VMBookmark) {
+    this.viewBookmark.emit(row);
   }
 
   onCopy(row: VMBookmark) {

@@ -63,7 +63,12 @@ export class BookmarksPageComponent implements OnInit {
         }
         if (success && id) {
           // Redirect to the details page with the created ID
-          this.router.navigate([`/bookmarks/details/${id}`]).then();
+          this.router
+            .navigate([`/bookmarks/details/${id}`], {
+              // "new" query parameter lets the /bookmarks/details/:id route know that we are using the view for a newly created bookmark
+              queryParams: { new: true },
+            })
+            .then();
         }
       });
     this.store.dispatch(BookmarksActions.createBookmark({ payload: $event }));
@@ -135,5 +140,12 @@ export class BookmarksPageComponent implements OnInit {
         },
       },
     });
+  }
+
+  /**
+   * Redirects the user to the detailed view of a bookmark at /bookmarks/details/:id
+   */
+  onViewBookmark(bookmark: VMBookmark): void {
+    this.router.navigate([`/bookmarks/details/${bookmark.id}`]).then();
   }
 }

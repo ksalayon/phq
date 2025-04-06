@@ -1,16 +1,36 @@
-<ng-container *ngIf="bookmark$ | async as bookmark; else loading">
-  <div *ngIf="bookmark; else notFound">
-    <h1>{{ bookmark.name }}</h1>
-    <p>URL: <a [href]="bookmark.url" target="_blank">{{ bookmark.url }}</a></p>
-    <p>{{ bookmark.createdAt.toLocaleString() }}</p>
-    <p>{{ bookmark.modifiedAt?.toLocaleString() }}</p>
-  </div>
-</ng-container>
+<div class="top-bar">
+  <button
+    *ngIf="bookmark$ | async as bookmark"
+    mat-raised-button color="primary" [routerLink]="'/bookmarks'" class="back-button">
+    Back to Bookmarks
+  </button>
+</div>
 
-<ng-template #loading>
-  <p>Loading bookmark...</p>
-</ng-template>
+<div class="main-content">
+  <ng-container *ngIf="bookmark$ | async as bookmark; else loading">
+    <ng-container *ngIf="bookmark; else notFound">
+      <ng-container *ngIf="isForNewBookmark$ | async as isForNewBookmark">
+        <h1 class="mat-display-2">Bookmark added!</h1>
+        <h2 class="mat-h4">Thanks for your submission — your bookmark has been saved successfully.</h2>
+      </ng-container>
+      <mat-card appearance="outlined">
+        <mat-card-header>
+          <mat-card-title *ngIf="bookmark.name">{{ bookmark.name }}</mat-card-title>
+          <mat-card-subtitle>URL: <a [href]="bookmark.url" target="_blank">{{ bookmark.url }}</a></mat-card-subtitle>
+        </mat-card-header>
+        <mat-card-content>
+          <p>Created: {{ bookmark.createdAt.toLocaleString() }}</p>
+          <p *ngIf="bookmark.modifiedAt">Modified: {{ bookmark.modifiedAt.toLocaleString() }}</p>
+        </mat-card-content>
+      </mat-card>
+    </ng-container>
+  </ng-container>
 
-<ng-template #notFound>
-  <p>The bookmark could not be found.</p>
-</ng-template>
+  <ng-template #loading>
+    <p>Loading bookmark...</p>
+  </ng-template>
+
+  <ng-template #notFound>
+    <p>The bookmark could not be found.</p>
+  </ng-template>
+</div>
