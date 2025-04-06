@@ -1,3 +1,8 @@
+/* eslint-disable @typescript-eslint/member-ordering */
+// Need to override the 'member-ordering' lint rule or the inject() method for doing DI in Angular will show an error
+// This is specially important for the effects file where if Actions was injected after the actual created effect method, the
+// action$ will be undefined and will throw an error when the Effect is initialized at provideEffects()
+
 import { inject, Injectable } from '@angular/core';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
 import { catchError, map, mergeMap, take } from 'rxjs/operators';

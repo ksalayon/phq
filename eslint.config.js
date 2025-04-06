@@ -10,15 +10,6 @@ export default [
     ignores: ['**/node_modules/**', '**/dist/**', '**/build/**', '**/.angular/**'],
   },
   {
-    files: ['src/app/**/*.ts'],
-    // Need to override this or the inject() method for doing DI in Angular will show an error
-    // This is specially important for the effects file where if Actions was injected after the actual created effect method, the
-    // action$ will be undefined and will throw an error when the Effect is initialized at provideEffects()
-    rules: {
-      '@typescript-eslint/member-ordering': 'off', // Overriding a specific rule for these files
-    },
-  },
-  {
     files: ['src/**/*.ts'],
     languageOptions: {
       parser: tseslintParser,
