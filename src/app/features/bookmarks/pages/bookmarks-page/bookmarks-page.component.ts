@@ -14,6 +14,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { VMBookmark } from '../../components/bookmarks-table/bookmarks-table.models';
 import { ModalService } from '../../../../shared/services/modal-dialog.service';
 import { BookmarksUtils } from '../../utils/bookmark.util';
+import { ConfirmDeleteDialogComponent } from '../../components/confirm-delete-dialog/confirm-delete-dialog.component';
 
 @Component({
   standalone: true,
@@ -75,6 +76,23 @@ export class BookmarksPageComponent implements OnInit {
   // Handle bookmark deletion
   onDeleteBookmark(bookmark: VMBookmark) {
     console.log('onDeleteBookmark', bookmark);
+    this.modalService.open(ConfirmDeleteDialogComponent, {
+      inputs: {
+        bookmark: BookmarksUtils.transformSingleVMToBookmark(bookmark),
+      },
+      outputs: {
+        submitted: (data) => {
+          // dispatch event to update bookmark
+          // this.store.dispatch(BookmarksActions.updateBookmark({ payload: data }));
+          console.log('confirm delete submitted', data);
+          this.modalService.close();
+        },
+        closed: () => {
+          console.log('cancel delete');
+          this.modalService.close();
+        },
+      },
+    });
   }
 
   /**
