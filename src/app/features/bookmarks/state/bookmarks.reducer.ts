@@ -74,9 +74,17 @@ export const bookmarksReducer = createReducer(
     };
   }),
   on(BookmarksActions.updateBookmarkSuccess, (state, { changes }) => {
+    // Get the current state of the bookmark by its ID
+    const currentBookmark = state.entities[changes.id];
+    // Compare old and new values to determine if the name or URL was updated
+    const hasNameChanged = currentBookmark?.name !== changes.name;
+    const hasUrlChanged = currentBookmark?.url !== changes.url;
+    // sets modifiedAt to current date if there are any changes else it retains the original modifiedAt date
+    const modifiedAt = hasNameChanged || hasUrlChanged ? new Date() : currentBookmark?.modifiedAt;
+
     return {
       ...bookmarksAdapter.updateOne(
-        { id: changes.id, changes: { ...changes, modifiedAt: new Date() } }, // update modifiedAt to current time
+        { id: changes.id, changes: { ...changes, modifiedAt } }, // update modifiedAt to current time
         state
       ),
       loading: false, // Ensure loading and isSubmitting flags are reset to false after success

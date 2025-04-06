@@ -15,6 +15,7 @@ import { VMBookmark } from '../../components/bookmarks-table/bookmarks-table.mod
 import { ModalService } from '../../../../shared/services/modal-dialog.service';
 import { BookmarksUtils } from '../../utils/bookmark.util';
 import { ConfirmDeleteDialogComponent } from '../../components/confirm-delete-dialog/confirm-delete-dialog.component';
+import { BookmarkStateService } from '../../services/bookmark-state.service';
 
 @Component({
   standalone: true,
@@ -23,6 +24,7 @@ import { ConfirmDeleteDialogComponent } from '../../components/confirm-delete-di
   templateUrl: './bookmarks-page.component.html',
   styleUrl: './bookmarks-page.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
+  providers: [BookmarkStateService],
 })
 export class BookmarksPageComponent implements OnInit {
   private store = inject(Store);
@@ -39,6 +41,7 @@ export class BookmarksPageComponent implements OnInit {
   destroyRef = inject(DestroyRef);
   // modal service from shared directory
   modalService = inject(ModalService);
+  bookmarkStateService = inject(BookmarkStateService);
 
   ngOnInit() {
     this.monitorFormSubmissionProgress();
@@ -75,7 +78,6 @@ export class BookmarksPageComponent implements OnInit {
 
   // Handle bookmark deletion
   onDeleteBookmark(bookmark: VMBookmark) {
-    console.log('onDeleteBookmark', bookmark);
     this.modalService.open(ConfirmDeleteDialogComponent, {
       inputs: {
         bookmark: BookmarksUtils.transformSingleVMToBookmark(bookmark),
@@ -84,7 +86,14 @@ export class BookmarksPageComponent implements OnInit {
         submitted: (data) => {
           // dispatch event to delete bookmark
           this.store.dispatch(BookmarksActions.deleteBookmark({ id: data.id }));
-          this.modalService.close();
+          // Listen for success or failure
+          this.bookmarkStateService.monitorSubmission().subscribe(({ success, error }) => {
+            if (success) {
+              this.modalService.close(); // Close the modal on success
+            } else {
+              // TODO: Show snackbar error
+            }
+          });
         },
         closed: () => {
           // Deletion cancelled
@@ -113,7 +122,15 @@ export class BookmarksPageComponent implements OnInit {
         submitted: (data) => {
           // dispatch event to update bookmark
           this.store.dispatch(BookmarksActions.updateBookmark({ payload: data }));
-          this.modalService.close();
+
+          // Listen for success or failure
+          this.bookmarkStateService.monitorSubmission().subscribe(({ success, error }) => {
+            if (success) {
+              this.modalService.close(); // Close the modal on success
+            } else {
+              console.error('Failed to update bookmark:', error); // Handle errors
+            }
+          });
         },
         closed: () => {
           this.modalService.close();
