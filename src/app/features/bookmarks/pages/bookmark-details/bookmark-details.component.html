@@ -1,1 +1,16 @@
-<p>bookmark-detail works!</p>
+<ng-container *ngIf="bookmark$ | async as bookmark; else loading">
+  <div *ngIf="bookmark; else notFound">
+    <h1>{{ bookmark.name }}</h1>
+    <p>URL: <a [href]="bookmark.url" target="_blank">{{ bookmark.url }}</a></p>
+    <p>{{ bookmark.createdAt.toLocaleString() }}</p>
+    <p>{{ bookmark.modifiedAt?.toLocaleString() }}</p>
+  </div>
+</ng-container>
+
+<ng-template #loading>
+  <p>Loading bookmark...</p>
+</ng-template>
+
+<ng-template #notFound>
+  <p>The bookmark could not be found.</p>
+</ng-template>

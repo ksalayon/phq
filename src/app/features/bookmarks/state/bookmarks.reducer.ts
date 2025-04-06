@@ -28,15 +28,15 @@ export const bookmarksReducer = createReducer(
   initialState,
 
   // Load Bookmarks
-  // on(BookmarksActions.loadBookmarks, (state) => ({ ...state, loading: true })),
-  // on(BookmarksActions.loadBookmarksSuccess, (state, { bookmarks }) =>
-  //   bookmarksAdapter.setAll(bookmarks, { ...state, loading: false, error: null })
-  // ),
-  // on(BookmarksActions.loadBookmarksFailure, (state, { error }) => ({
-  //   ...state,
-  //   loading: false,
-  //   error,
-  // })),
+  on(BookmarksActions.loadBookmark, (state) => ({ ...state, loading: true })),
+  on(BookmarksActions.loadBookmarkSuccess, (state, { bookmark }) =>
+    bookmarksAdapter.upsertOne(bookmark, { ...state, loading: false, error: null })
+  ),
+  on(BookmarksActions.loadBookmarkFailure, (state, { error }) => ({
+    ...state,
+    loading: false,
+    error,
+  })),
 
   // Create Bookmark
   on(BookmarksActions.createBookmark, (state, { payload }) => {

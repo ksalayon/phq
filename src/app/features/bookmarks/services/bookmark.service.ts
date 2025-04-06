@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import { Observable, of } from 'rxjs';
 import {
   Bookmark,
@@ -6,9 +6,13 @@ import {
   defaultBookmarkGroup,
   UpdateBookmarkPayload,
 } from '../models/bookmark';
+import { Store } from '@ngrx/store';
+import { selectBookmarkById } from '../state/bookmarks.selectors';
 
 @Injectable()
 export class BookmarkService {
+  private store = inject(Store);
+
   constructor() {}
 
   getBookmarks() {
@@ -16,7 +20,9 @@ export class BookmarkService {
   }
 
   getBookmark(id: Bookmark['id']) {
-    return of({} as Bookmark);
+    // TODO Will have to implement indexedDB storage later on and this call will have to race with that for retrieving the
+    // bookmark
+    return this.store.select(selectBookmarkById(id));
   }
 
   updateBookmark(bookmark: UpdateBookmarkPayload) {

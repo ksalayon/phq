@@ -13,6 +13,12 @@ export const selectAllBookmarks = createSelector(
       .sort(BookmarksUtils.compareByDates) as Bookmark[]
 );
 
+// Selector to retrieve a specific bookmark by its ID
+export const selectBookmarkById = (id: string) =>
+  createSelector(selectAllBookmarks, (bookmarks) =>
+    bookmarks.find((bookmark) => bookmark.id === id)
+  );
+
 // export const selectBookmarkGroups = createSelector(selectBookmarksState, (state) => state.groups);
 
 export const selectLoading = createSelector(selectBookmarksState, (state) => state.loading);

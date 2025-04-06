@@ -13,6 +13,23 @@ export class BookmarksEffects {
   private bookmarkService = inject(BookmarkService);
   private store = inject(Store);
 
+  loadBookmark$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(BookmarksActions.loadBookmark),
+      mergeMap(({ id }) =>
+        this.bookmarkService.getBookmark(id).pipe(
+          map((bookmark) => {
+            if (!bookmark) {
+              return BookmarksActions.loadBookmarkFailure({ error: 'The bookmark does not exist' });
+            }
+            return BookmarksActions.loadBookmarkSuccess({ bookmark });
+          }),
+          catchError((error) => of(BookmarksActions.loadBookmarkFailure({ error: error.message })))
+        )
+      )
+    )
+  );
+
   /**
    * Effect to handle the creation of a bookmark.
    * It first checks whether a bookmark with the same URL already exists in the store. If a duplicate URL is found,

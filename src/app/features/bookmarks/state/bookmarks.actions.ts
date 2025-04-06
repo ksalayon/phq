@@ -4,6 +4,9 @@ import { Bookmark, CreateBookmarkPayload, UpdateBookmarkPayload } from '../model
 export const BookmarksActions = createActionGroup({
   source: 'bookmarks',
   events: {
+    'Load Bookmark': props<{ id: Bookmark['id'] }>(),
+    'Load Bookmark Success': props<{ bookmark: Bookmark }>(),
+    'Load Bookmark Failure': props<{ error: string }>(),
     'Create Bookmark': props<{ payload: CreateBookmarkPayload }>(),
     'Create Bookmark Success': props<{ bookmark: Bookmark }>(),
     'Create Bookmark Failure': props<{ error: string }>(),
