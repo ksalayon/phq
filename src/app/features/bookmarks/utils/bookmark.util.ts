@@ -3,6 +3,12 @@ import { Bookmark } from '../models/bookmark';
 import { VMBookmark } from '../components/bookmarks-table/bookmarks-table.models';
 
 export class BookmarksUtils {
+  /**
+   * Generates a default user-friendly description based on the given URL.
+   *
+   * @param {string} url - The URL string to generate a description for.
+   * @return {string} A generated description based on the URL, or a default message if the URL is invalid.
+   */
   public static generateDefaultDescription(url: string): string {
     try {
       // Parse the URL
@@ -50,6 +56,13 @@ export class BookmarksUtils {
     };
   }
 
+  /**
+   * Transforms an array of Bookmark objects into an array of VMBookmark objects,
+   * converting date fields to formatted string representations.
+   *
+   * @param {Bookmark[]} bookmarks - The list of bookmarks to be transformed.
+   * @return {VMBookmark[]} - The transformed list of VMBookmark objects.
+   */
   public static transformBookmarksToVM(bookmarks: Bookmark[]): VMBookmark[] {
     return bookmarks.map((bm) => ({
       ...bm, // Spread all other properties from Bookmark
@@ -58,6 +71,12 @@ export class BookmarksUtils {
     }));
   }
 
+  /**
+   * Transforms one or more VMBookmark objects into their corresponding Bookmark representations.
+   *
+   * @param {VMBookmark | VMBookmark[]} vmBookmarks - A single VMBookmark object or an array of VMBookmark objects to be transformed.
+   * @return {Bookmark | Bookmark[]} The transformed Bookmark object or an array of Bookmark objects.
+   */
   public static transformVMToBookmarks(
     vmBookmarks: VMBookmark | VMBookmark[]
   ): Bookmark | Bookmark[] {

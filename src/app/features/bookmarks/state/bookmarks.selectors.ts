@@ -19,8 +19,6 @@ export const selectBookmarkById = (id: string) =>
     bookmarks.find((bookmark) => bookmark.id === id)
   );
 
-// export const selectBookmarkGroups = createSelector(selectBookmarksState, (state) => state.groups);
-
 export const selectLoading = createSelector(selectBookmarksState, (state) => state.loading);
 export const selectError = createSelector(selectBookmarksState, (state) => state.error);
 export const selectIsSubmitting = createSelector(

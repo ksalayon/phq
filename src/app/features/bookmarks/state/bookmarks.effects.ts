@@ -15,6 +15,15 @@ export class BookmarksEffects {
   private store = inject(Store);
   private bookmarkStateService = inject(BookmarkStateService);
 
+  /**
+   * Effect to load a bookmark by its ID.
+   *
+   * it triggers a side effect to fetch the specific bookmark from the `BookmarkService` using the provided ID.
+   *
+   * On a successful response:
+   * - If the bookmark exists, it dispatches the `loadBookmarkSuccess` action with the fetched bookmark.
+   * - If the bookmark does not exist or if there is an error during the request, it dispatches the `loadBookmarkFailure` action with an appropriate error message.
+   */
   loadBookmark$ = createEffect(() =>
     this.actions$.pipe(
       ofType(BookmarksActions.loadBookmark),

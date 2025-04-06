@@ -4,6 +4,15 @@ import { Bookmark } from '../../models/bookmark';
 import { MatButton } from '@angular/material/button';
 import { MatCard, MatCardContent } from '@angular/material/card';
 
+/**
+ * ConfirmDeleteDialogComponent is a standalone Angular component that provides a user interface
+ * for confirming or canceling a delete operation for a bookmark entry.
+ *
+ * This dialog allows users to either confirm the deletion of a specified item, represented by
+ * the `bookmark` input property, or to cancel the operation.
+ *
+ * The component implements the BaseFormInterface for handling interactions tied to Bookmark data.
+ */
 @Component({
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,

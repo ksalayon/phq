@@ -15,6 +15,12 @@ export const defaultBookmarkGroup = {
   name: 'Default' as BookmarkGroupName,
 };
 
+/**
+ * Represents a bookmark entry.
+ *
+ * This interface defines the structure for a bookmark, including its unique identifier,
+ * name, URL, associated group, and timestamps for creation and modification.
+ */
 export interface Bookmark {
   id: BookmarkId; // unique bookmark id
   name: BookmarkName;
@@ -24,5 +30,13 @@ export interface Bookmark {
   modifiedAt?: Date; // modification timestamp
 }
 
+/**
+ * Represents the payload required to update a bookmark.
+ */
 export type UpdateBookmarkPayload = Pick<Bookmark, 'url' | 'id' | 'name'>;
+/**
+ * Represents the payload required to create a bookmark.
+ * This type extracts specific properties from the `Bookmark` type,
+ * specifically the `url` and `name` fields
+ */
 export type CreateBookmarkPayload = Pick<Bookmark, 'url' | 'name'>;

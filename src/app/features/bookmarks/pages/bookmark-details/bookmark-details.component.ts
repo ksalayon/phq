@@ -10,6 +10,11 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MatCardModule } from '@angular/material/card';
 import { MatButton } from '@angular/material/button';
 
+/**
+ * BookmarkDetailsComponent is a standalone Angular component used to display the details of a specific bookmark.
+ * It interacts with the route parameters and query parameters to determine the bookmark details to display and
+ * whether it corresponds to a newly created bookmark.
+ */
 @Component({
   standalone: true,
   selector: 'phq-bookmark-details',

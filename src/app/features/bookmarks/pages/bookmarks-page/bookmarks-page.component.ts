@@ -14,6 +14,22 @@ import { BookmarkStateService } from '../../services/bookmark-state.service';
 import { Router } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
+/**
+ * BookmarksPageComponent is a container component that provides functionality for managing bookmarks.
+ * It integrates features such as creating, editing, deleting, and viewing bookmarks.
+ * The component employs reactive state management, modal dialogs, and routing.
+ *
+ * This component depends on BookmarkFormComponent and BookmarksTableComponent for
+ * UI presentation and interaction with user inputs. State management and side effects
+ * are handled by injected services.
+ *
+ * Functionalities and Features:
+ * - Fetches and displays a list of bookmarks via reactive state management.
+ * - Provides a form for creating new bookmarks with error handling and submission monitoring.
+ * - Allows editing of existing bookmarks through a pre-filled modal form.
+ * - Deletes bookmarks with a confirmation dialog.
+ * - Redirects to detailed views for specific bookmarks upon selection.
+ */
 @Component({
   standalone: true,
   selector: 'phq-bookmarks-page',

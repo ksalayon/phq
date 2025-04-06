@@ -22,6 +22,16 @@ import { Observable } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { BaseFormInterface } from '../../../../shared/models/base-form.interface';
 
+/**
+ * BookmarkFormComponent is a reusable form component used for creating or editing
+ * bookmark entities. This component supports horizontal or vertical layout orientation
+ * and allows users to input and submit bookmark data, including URL and an optional name.
+ *
+ * Key responsibilities include:
+ * - Displaying and managing a reactive form for bookmark data.
+ * - Dynamically applying the layout orientation based on the `orientation` input.
+ * - Handling form submissions and emitting events with the entered data.
+ */
 @Component({
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -83,6 +93,13 @@ export class BookmarkFormComponent implements OnInit, BaseFormInterface<UpdateBo
     }
   }
 
+  /**
+   * Handles the form submission process. If the form is valid, it constructs
+   * the payload with form data and emits a submission event.
+   * Resets the form state to its initial status after submission.
+   *
+   * @return {void} Does not return any value.
+   */
   onSubmit(): void {
     if (this.form.valid) {
       // This is used to differentiate between a create and update payload
