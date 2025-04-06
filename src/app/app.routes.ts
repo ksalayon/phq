@@ -10,6 +10,7 @@ import { provideEffects } from '@ngrx/effects';
 import { BookmarksEffects } from './features/bookmarks/state/bookmarks.effects';
 import { BookmarksResolver } from './features/bookmarks/bookmarks.resolver';
 import { BookmarkStateService } from './features/bookmarks/services/bookmark-state.service';
+import { IndexedDbService } from './features/bookmarks/services/persistence/indexed-db.service';
 
 export const routes: Routes = [
   {
@@ -19,6 +20,7 @@ export const routes: Routes = [
     // are siblings  (based on design spec) and will need to share the providers below
     // to avoid duplicated instances
     providers: [
+      IndexedDbService,
       BookmarkService,
       BookmarkStateService,
       provideState({ name: bookmarksFeatureKey, reducer: bookmarksReducer }),
