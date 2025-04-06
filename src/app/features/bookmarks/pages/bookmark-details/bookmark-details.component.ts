@@ -28,17 +28,20 @@ export class BookmarkDetailsComponent implements OnInit {
 
   // Observable for the selected bookmark
   bookmark$: Observable<Bookmark | undefined> | undefined;
+
   // async property that the template uses to determine whether this page is being viewed
   // for a newly created bookmark via /bookmarks/details/:id?new=true
   isForNewBookmark$: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(false);
 
   private route = inject(ActivatedRoute); // Access the current route
+
   private queryParams$: Observable<any> = this.route.queryParamMap.pipe(
     map((queryParamMap) => ({
       // Map query params to an object
       new: queryParamMap.get('new'), //query param, "new", signifies that component is used for a newly created bookmark
     }))
   );
+
   private store = inject(Store); // Access the global NGRX store
 
   ngOnInit() {
