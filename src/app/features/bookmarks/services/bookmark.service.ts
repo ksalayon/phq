@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { of } from 'rxjs';
+import { Observable, of } from 'rxjs';
 import {
   Bookmark,
   CreateBookmarkPayload,
@@ -24,10 +24,14 @@ export class BookmarkService {
   }
 
   deleteBookmark(id: Bookmark['id']) {
+    // const failed = true;
+    // if (failed) {
+    //   return throwError(() => new Error('No deletion handling for now'));
+    // }
     return of(id);
   }
 
-  createBookmark(bookmark: CreateBookmarkPayload) {
+  createBookmark(bookmark: CreateBookmarkPayload): Observable<Bookmark> {
     const uniqueId = crypto.randomUUID(); // Generate the unique ID for the bookmark entity
     const currentDate = new Date();
     return of({

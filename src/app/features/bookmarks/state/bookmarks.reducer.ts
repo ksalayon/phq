@@ -89,14 +89,31 @@ export const bookmarksReducer = createReducer(
     error,
     loading: false,
     isSubmitting: false,
-  }))
+  })),
 
-  // // Delete Bookmark
-  // on(BookmarksActions.deleteBookmarkSuccess, (state, { id }) =>
-  //   bookmarksAdapter.removeOne(id, state)
-  // ),
-  // on(BookmarksActions.deleteBookmarkFailure, (state, { error }) => ({
-  //   ...state,
-  //   error,
-  // }))
+  // Delete Bookmark
+  on(BookmarksActions.deleteBookmark, (state, { id }) => {
+    return {
+      ...state,
+      loading: true,
+      isSubmitting: true,
+      error: null,
+    };
+  }),
+  on(BookmarksActions.deleteBookmarkSuccess, (state, { id }) => {
+    return {
+      ...bookmarksAdapter.removeOne(id, state),
+      loading: false, // Ensure loading and isSubmitting flags are reset to false after success
+      isSubmitting: false,
+      error: null,
+    };
+  }),
+  on(BookmarksActions.deleteBookmarkFailure, (state, { error }) => {
+    return {
+      ...state,
+      loading: false,
+      isSubmitting: false,
+      error,
+    };
+  })
 );

@@ -13,6 +13,13 @@ export class BookmarksEffects {
   private bookmarkService = inject(BookmarkService);
   private store = inject(Store);
 
+  /**
+   * Effect to handle the creation of a bookmark.
+   * It first checks whether a bookmark with the same URL already exists in the store. If a duplicate URL is found,
+   * the effect will emit a `BookmarksActions.createBookmarkFailure` action with an appropriate error message.
+   *
+   * If no duplicate is found, then it saves it into the store
+   */
   createBookmark$ = createEffect(() =>
     this.actions$.pipe(
       ofType(BookmarksActions.createBookmark),
@@ -49,6 +56,17 @@ export class BookmarksEffects {
     )
   );
 
+  /**
+   * Effect to handle the update of a bookmark in the application state.
+   *
+   * Listens for the `updateBookmark` action and processes the update by ensuring the bookmark's URL is
+   * unique (except when editing and retaining the same URL). If a bookmark with the same URL already exists
+   * under a different ID, the effect dispatches a `createBookmarkFailure` action with an error message.
+   *
+   * If the URL is unique or unchanged, the effect attempts to update the bookmark through the `bookmarkService`.
+   *
+   * The effect completes subscriptions to store observables like `selectAllBookmarks` to ensure no memory leaks.
+   */
   updateBookmark$ = createEffect(() =>
     this.actions$.pipe(
       ofType(BookmarksActions.updateBookmark),
@@ -80,6 +98,33 @@ export class BookmarksEffects {
                   })
                 )
               )
+            );
+          })
+        )
+      )
+    )
+  );
+
+  /**
+   * Effect to handle the deletion of a bookmark, deleting a bookmark based on the provided `id`.
+   *
+   * Upon successful deletion, it dispatches a `deleteBookmarkSuccess` action
+   * containing the id of the deleted bookmark. If the deletion fails,
+   * it dispatches a `deleteBookmarkFailure` action with an error message.
+   *
+   */
+  deleteBookmark$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(BookmarksActions.deleteBookmark),
+      mergeMap(({ id }) =>
+        this.bookmarkService.deleteBookmark(id).pipe(
+          map((bookmark) => BookmarksActions.deleteBookmarkSuccess({ id })),
+          catchError(() => {
+            // TODO: Log to Raygun
+            return of(
+              BookmarksActions.deleteBookmarkFailure({
+                error: 'Bookmark deletion failed',
+              })
             );
           })
         )

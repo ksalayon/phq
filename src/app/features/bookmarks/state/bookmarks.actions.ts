@@ -10,5 +10,8 @@ export const BookmarksActions = createActionGroup({
     'Update Bookmark': props<{ payload: UpdateBookmarkPayload }>(),
     'Update Bookmark Success': props<{ changes: Bookmark }>(),
     'Update Bookmark Failure': props<{ error: string }>(),
+    'Delete Bookmark': props<{ id: Bookmark['id'] }>(),
+    'Delete Bookmark Success': props<{ id: Bookmark['id'] }>(),
+    'Delete Bookmark Failure': props<{ error: string }>(),
   },
 });

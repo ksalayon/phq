@@ -82,13 +82,12 @@ export class BookmarksPageComponent implements OnInit {
       },
       outputs: {
         submitted: (data) => {
-          // dispatch event to update bookmark
-          // this.store.dispatch(BookmarksActions.updateBookmark({ payload: data }));
-          console.log('confirm delete submitted', data);
+          // dispatch event to delete bookmark
+          this.store.dispatch(BookmarksActions.deleteBookmark({ id: data.id }));
           this.modalService.close();
         },
         closed: () => {
-          console.log('cancel delete');
+          // Deletion cancelled
           this.modalService.close();
         },
       },
