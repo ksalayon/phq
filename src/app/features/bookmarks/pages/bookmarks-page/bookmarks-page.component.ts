@@ -77,8 +77,6 @@ export class BookmarksPageComponent implements OnInit {
       },
       outputs: {
         submitted: (data) => {
-          // dispatch event to delete bookmark
-          this.store.dispatch(BookmarksActions.deleteBookmark({ id: data.id }));
           // Listen for success or failure
           this.bookmarkStateService
             .monitorSubmission()
@@ -90,6 +88,8 @@ export class BookmarksPageComponent implements OnInit {
                 // TODO: Show snackbar error
               }
             });
+          // dispatch event to delete bookmark
+          this.store.dispatch(BookmarksActions.deleteBookmark({ id: data.id }));
         },
         closed: () => {
           // Deletion cancelled
@@ -116,9 +116,6 @@ export class BookmarksPageComponent implements OnInit {
       },
       outputs: {
         submitted: (data) => {
-          // dispatch event to update bookmark
-          this.store.dispatch(BookmarksActions.updateBookmark({ payload: data }));
-
           // Listen for success or failure
           this.bookmarkStateService
             .monitorSubmission()
@@ -130,6 +127,8 @@ export class BookmarksPageComponent implements OnInit {
                 this.bookmarkUpdateErrorSubject$?.next(error || 'Bookmark update failed');
               }
             });
+          // dispatch event to update bookmark
+          this.store.dispatch(BookmarksActions.updateBookmark({ payload: data }));
         },
         closed: () => {
           this.modalService.close();
