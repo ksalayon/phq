@@ -63,7 +63,7 @@ export class IndexedDbService {
       if (existingBookmark && existingBookmark.id !== bookmark.id) {
         throw Error('A bookmark with the same URL already exists.');
       }
-      await db.put('bookmarks', bookmark);
+      await db.put('bookmarks', { ...existingBookmark, ...bookmark });
       return bookmark;
     } catch (error) {
       throw new Error(error instanceof Error ? error.message : 'Failed to save bookmark.');

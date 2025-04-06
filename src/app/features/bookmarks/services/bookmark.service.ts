@@ -53,7 +53,7 @@ export class BookmarkService {
         // sets modifiedAt to current date if there are any changes else it retains the original modifiedAt date
         const modifiedAt =
           hasNameChanged || hasUrlChanged ? new Date() : bookmarkToUpdate?.modifiedAt;
-        const updatedBookmark = { ...bookmark, modifiedAt } as Bookmark;
+        const updatedBookmark = { ...bookmarkToUpdate, ...bookmark, modifiedAt } as Bookmark;
         return from(this.indexedDbService.saveBookmark(updatedBookmark));
       })
     );
