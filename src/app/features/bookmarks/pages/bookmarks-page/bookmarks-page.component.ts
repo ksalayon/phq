@@ -4,13 +4,8 @@ import { CreateBookmarkPayload } from '../../models/bookmark';
 import { Store } from '@ngrx/store';
 import { BookmarksActions } from '../../state/bookmarks.actions';
 import { BookmarksTableComponent } from '../../components/bookmarks-table/bookmarks-table.component';
-import {
-  selectAllBookmarks,
-  selectError,
-  selectIsSubmitting,
-} from '../../state/bookmarks.selectors';
-import { BehaviorSubject, Subject, withLatestFrom } from 'rxjs';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { selectAllBookmarks } from '../../state/bookmarks.selectors';
+import { BehaviorSubject, Subject } from 'rxjs';
 import { VMBookmark } from '../../components/bookmarks-table/bookmarks-table.models';
 import { ModalService } from '../../../../shared/services/modal-dialog.service';
 import { BookmarksUtils } from '../../utils/bookmark.util';
@@ -35,36 +30,18 @@ export class BookmarksPageComponent implements OnInit {
   isFormSubmitting$ = this.isFormSubmittingSubject$.asObservable();
 
   bookmarks$ = this.store.select(selectAllBookmarks);
-  bookmarkErrorSubject$: Subject<string | null> | undefined = new Subject<string | null>();
-  bookmarkError$ = this.bookmarkErrorSubject$?.asObservable();
+  bookmarkCreateErrorSubject$: Subject<string | null> | undefined = new Subject<string | null>();
+  bookmarkCreateError$ = this.bookmarkCreateErrorSubject$?.asObservable();
+
+  bookmarkUpdateErrorSubject$: Subject<string | null> | undefined = new Subject<string | null>();
+  bookmarkUpdateError$ = this.bookmarkUpdateErrorSubject$?.asObservable();
 
   destroyRef = inject(DestroyRef);
   // modal service from shared directory
   modalService = inject(ModalService);
   bookmarkStateService = inject(BookmarkStateService);
 
-  ngOnInit() {
-    this.monitorFormSubmissionProgress();
-  }
-
-  /**
-   * Monitors the progress of form submission by observing the submission state and
-   * capturing any associated errors. Updates internal subjects to reflect the current
-   * state of form submission and errors.
-   *
-   * @return {void} This method does not return a value.
-   */
-  private monitorFormSubmissionProgress(): void {
-    this.store
-      .select(selectIsSubmitting)
-      .pipe(takeUntilDestroyed(this.destroyRef), withLatestFrom(this.store.select(selectError)))
-      .subscribe(([isSubmitting, error]) => {
-        this.isFormSubmittingSubject$.next(isSubmitting);
-        if (!isSubmitting) {
-          this?.bookmarkErrorSubject$?.next(error);
-        }
-      });
-  }
+  ngOnInit() {}
 
   /**
    * Handles the submission of the form to create a new bookmark.
@@ -72,8 +49,15 @@ export class BookmarksPageComponent implements OnInit {
    * @param {CreateBookmarkPayload} $event - The payload containing the data necessary to create a bookmark.
    * @return {void} No return value.
    */
-  onFormSubmit($event: CreateBookmarkPayload): void {
+  onCreateBookmark($event: CreateBookmarkPayload): void {
+    this.isFormSubmittingSubject$.next(true);
     this.store.dispatch(BookmarksActions.createBookmark({ payload: $event }));
+    this.bookmarkStateService.monitorSubmission().subscribe(({ success, error }) => {
+      this.isFormSubmittingSubject$.next(false);
+      if (error) {
+        this?.bookmarkCreateErrorSubject$?.next(error);
+      }
+    });
   }
 
   // Handle bookmark deletion
@@ -115,7 +99,7 @@ export class BookmarksPageComponent implements OnInit {
       inputs: {
         bookmark: BookmarksUtils.transformSingleVMToBookmark(bookmark),
         isLoading$: this.isFormSubmitting$,
-        error$: this.bookmarkError$,
+        error$: this.bookmarkUpdateError$,
         orientation: 'vertical',
       },
       outputs: {
@@ -128,7 +112,7 @@ export class BookmarksPageComponent implements OnInit {
             if (success) {
               this.modalService.close(); // Close the modal on success
             } else {
-              console.error('Failed to update bookmark:', error); // Handle errors
+              this.bookmarkUpdateErrorSubject$?.next(error);
             }
           });
         },
