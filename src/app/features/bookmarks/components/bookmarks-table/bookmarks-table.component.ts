@@ -20,8 +20,8 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MatMenu, MatMenuItem, MatMenuTrigger } from '@angular/material/menu';
 import { MatIcon } from '@angular/material/icon';
 import { MatIconButton } from '@angular/material/button';
-import { BookmarksUtils } from '../../utils/bookmark.util';
 import { SnackbarService } from '../../../../shared/services/snackbar.service';
+import { TimeAgoDetailedPipe } from '../../../../shared/pipes/time-ago-detailed.pipe';
 
 @Component({
   standalone: true,
@@ -37,6 +37,7 @@ import { SnackbarService } from '../../../../shared/services/snackbar.service';
     MatMenuItem,
     MatMenuTrigger,
     MatIconButton,
+    TimeAgoDetailedPipe,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -56,7 +57,7 @@ export class BookmarksTableComponent implements AfterViewInit, OnInit {
     'modifiedAt',
     'actions',
   ];
-  dataSource!: MatTableDataSource<VMBookmark>;
+  dataSource!: MatTableDataSource<Bookmark>;
 
   private destroyRef = inject(DestroyRef);
   // private snackBar = inject(MatSnackBar);
@@ -99,9 +100,7 @@ export class BookmarksTableComponent implements AfterViewInit, OnInit {
 
   private monitorBookmarks() {
     this.bookmarks$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((bookmarks) => {
-      this.dataSource = new MatTableDataSource<VMBookmark>(
-        BookmarksUtils.transformBookmarksToVM(bookmarks)
-      );
+      this.dataSource = new MatTableDataSource<Bookmark>(bookmarks);
       this.dataSource.paginator = this.paginator;
     });
   }
