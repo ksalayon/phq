@@ -42,6 +42,23 @@ export class BookmarksEffects {
   );
 
   /**
+   * Effect to load all bookmarks
+   */
+  loadBookmarks$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(BookmarksActions.loadBookmarks),
+      mergeMap(() =>
+        this.bookmarkService.getBookmarks().pipe(
+          map((bookmarks) => {
+            return BookmarksActions.loadBookmarksSuccess({ bookmarks });
+          }),
+          catchError((error) => of(BookmarksActions.loadBookmarksFailure({ error: error.message })))
+        )
+      )
+    )
+  );
+
+  /**
    * Effect to handle the creation of a bookmark.
    * It first checks whether a bookmark with the same URL already exists in the store. If a duplicate URL is found,
    * the effect will emit a `BookmarksActions.createBookmarkFailure` action with an appropriate error message.
@@ -95,56 +112,33 @@ export class BookmarksEffects {
   /**
    * Effect to handle the update of a bookmark in the application state.
    *
-   * Listens for the `updateBookmark` action and processes the update by ensuring the bookmark's URL is
+   * Listens for the `updateBookmark` action and processes the update via bookmarkService.updateBookmark
+   * bookmarkService.updateBookmark ensures that the bookmark's URL is
    * unique (except when editing and retaining the same URL). If a bookmark with the same URL already exists
-   * under a different ID, the effect dispatches a `createBookmarkFailure` action with an error message.
+   * under a different ID, an error is thrown from the service and is appropriately handled it to update the store with the error
+   * enabling clients (i.e. components) to handle and present that error if needed
    *
-   * If the URL is unique or unchanged, the effect attempts to update the bookmark through the `bookmarkService`.
-   *
-   * The effect completes subscriptions to store observables like `selectAllBookmarks` to ensure no memory leaks.
    */
   updateBookmark$ = createEffect(() =>
     this.actions$.pipe(
       ofType(BookmarksActions.updateBookmark),
-      mergeMap((action) =>
-        this.store.select(selectAllBookmarks).pipe(
-          take(1), // ensure it completes
-          mergeMap((bookmarks) => {
-            const bookmarkExists = bookmarks.some(
-              (bookmark) =>
-                // Only disallow update if the new url matches a url that already exists for another bookmark
-                // This allows us to make the editing work even if the user does not change the url
-                bookmark.url === action.payload.url && bookmark.id !== action.payload.id
-            );
-
-            if (bookmarkExists) {
-              const errorMessage = 'Bookmark with the same name already exists';
-              this.bookmarkStateService.signalSubmissionError(errorMessage);
-              return of(
-                BookmarksActions.createBookmarkFailure({
-                  error: errorMessage,
-                })
-              );
-            }
-
-            return this.bookmarkService.updateBookmark(action.payload).pipe(
-              map((bookmark) => {
-                this.bookmarkStateService.signalSubmissionSuccess(bookmark.id);
-                return BookmarksActions.updateBookmarkSuccess({ changes: bookmark });
-              }),
-              catchError((error) => {
-                const errorMessage = error?.message || 'Bookmark update failed';
-                this.bookmarkStateService.signalSubmissionError(errorMessage);
-                return of(
-                  BookmarksActions.updateBookmarkFailure({
-                    error: error?.message || 'Bookmark update failed',
-                  })
-                );
+      mergeMap((action) => {
+        return this.bookmarkService.updateBookmark(action.payload).pipe(
+          map((bookmark) => {
+            this.bookmarkStateService.signalSubmissionSuccess(bookmark.id);
+            return BookmarksActions.updateBookmarkSuccess({ changes: bookmark });
+          }),
+          catchError((error) => {
+            const errorMessage = error?.message || 'Bookmark update failed';
+            this.bookmarkStateService.signalSubmissionError(errorMessage);
+            return of(
+              BookmarksActions.updateBookmarkFailure({
+                error: error?.message || 'Bookmark update failed',
               })
             );
           })
-        )
-      )
+        );
+      })
     )
   );
 

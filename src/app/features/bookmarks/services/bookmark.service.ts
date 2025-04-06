@@ -8,7 +8,6 @@ import {
 } from '../models/bookmark';
 import { Store } from '@ngrx/store';
 import { IndexedDbService } from './persistence/indexed-db.service';
-import { selectBookmarkById } from '../state/bookmarks.selectors';
 import { switchMap, take } from 'rxjs/operators';
 
 @Injectable()
@@ -27,24 +26,34 @@ export class BookmarkService {
   }
 
   updateBookmark(bookmark: UpdateBookmarkPayload) {
-    return this.store.select(selectBookmarkById(bookmark.id)).pipe(
+    // check if an entry in the store already has the url from the update payload
+    return from(this.indexedDbService.getBookmarkByUrl(bookmark.url)).pipe(
       take(1),
-      switchMap((currentBookmark) => {
-        if (!currentBookmark) {
+      switchMap((existingBookmark) => {
+        if (
+          existingBookmark &&
+          existingBookmark.url === bookmark.url &&
+          existingBookmark.id !== bookmark.id
+        ) {
+          // Throw an error if the bookmark does not exist
+          return throwError(() => new Error(`The bookmark with the same name already exists`));
+        }
+        return from(this.indexedDbService.getBookmarkById(bookmark.id));
+      }),
+      switchMap((bookmarkToUpdate) => {
+        if (!bookmarkToUpdate) {
           // Throw an error if the bookmark does not exist
           return throwError(
             () => new Error(`The bookmark with ID '${bookmark.id}' does not exist`)
           );
         }
-
         // Compare old and new values to determine if the name or URL was updated
-        const hasNameChanged = currentBookmark?.name !== bookmark.name;
-        const hasUrlChanged = currentBookmark?.url !== bookmark.url;
+        const hasNameChanged = bookmarkToUpdate?.name !== bookmark.name;
+        const hasUrlChanged = bookmarkToUpdate?.url !== bookmark.url;
         // sets modifiedAt to current date if there are any changes else it retains the original modifiedAt date
         const modifiedAt =
-          hasNameChanged || hasUrlChanged ? new Date() : currentBookmark?.modifiedAt;
+          hasNameChanged || hasUrlChanged ? new Date() : bookmarkToUpdate?.modifiedAt;
         const updatedBookmark = { ...bookmark, modifiedAt } as Bookmark;
-        // Save changes to IndexedDB
         return from(this.indexedDbService.saveBookmark(updatedBookmark));
       })
     );

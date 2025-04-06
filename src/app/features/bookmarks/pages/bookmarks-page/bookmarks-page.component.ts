@@ -59,7 +59,9 @@ export class BookmarksPageComponent implements OnInit {
   bookmarkStateService = inject(BookmarkStateService);
   private router = inject(Router);
 
-  ngOnInit() {}
+  ngOnInit() {
+    this.store.dispatch(BookmarksActions.loadBookmarks());
+  }
 
   /**
    * Handles the submission of the form to create a new bookmark.

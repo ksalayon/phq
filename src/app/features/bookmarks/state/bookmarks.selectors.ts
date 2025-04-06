@@ -19,6 +19,12 @@ export const selectBookmarkById = (id: string) =>
     bookmarks.find((bookmark) => bookmark.id === id)
   );
 
+// selector to retrieve a specific bookmark by its url
+export const selectBookmarkByUrl = (url: string) =>
+  createSelector(selectAllBookmarks, (bookmarks) =>
+    bookmarks.find((bookmark) => bookmark.url === url)
+  );
+
 export const selectLoading = createSelector(selectBookmarksState, (state) => state.loading);
 export const selectError = createSelector(selectBookmarksState, (state) => state.error);
 export const selectIsSubmitting = createSelector(

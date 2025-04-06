@@ -2,7 +2,6 @@ import { createEntityAdapter, EntityAdapter, EntityState } from '@ngrx/entity';
 import { createReducer, on } from '@ngrx/store';
 import { BookmarksActions } from './bookmarks.actions';
 import { Bookmark } from '../models/bookmark';
-import { sampleBookmarks } from '../utils/bookmarks.sample-data.util';
 import { BookmarksUtils } from '../utils/bookmark.util';
 
 export const bookmarksFeatureKey = 'bookmarks';
@@ -18,7 +17,6 @@ export const bookmarksAdapter: EntityAdapter<Bookmark> = createEntityAdapter<Boo
   selectId: (bookmark) => bookmark.id, // Explicitly set the `id` field as the key
 });
 export const initialState: BookmarksState = bookmarksAdapter.getInitialState({
-  ...bookmarksAdapter.addMany(sampleBookmarks, bookmarksAdapter.getInitialState()),
   error: null,
   loading: false,
   isSubmitting: false,
@@ -27,7 +25,18 @@ export const initialState: BookmarksState = bookmarksAdapter.getInitialState({
 export const bookmarksReducer = createReducer(
   initialState,
 
-  // Load Bookmarks
+  // Load Bookmarks (All)
+  on(BookmarksActions.loadBookmarks, (state) => ({ ...state, loading: true })),
+  on(BookmarksActions.loadBookmarksSuccess, (state, { bookmarks }) => {
+    return bookmarksAdapter.setAll(bookmarks, { ...state, loading: false, error: null });
+  }),
+  on(BookmarksActions.loadBookmarksFailure, (state, { error }) => ({
+    ...state,
+    loading: false,
+    error,
+  })),
+
+  // Load Bookmark (one)
   on(BookmarksActions.loadBookmark, (state) => ({ ...state, loading: true })),
   on(BookmarksActions.loadBookmarkSuccess, (state, { bookmark }) =>
     bookmarksAdapter.upsertOne(bookmark, { ...state, loading: false, error: null })
