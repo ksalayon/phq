@@ -41,6 +41,13 @@ import { BookmarksUtils } from '../../utils/bookmark.util';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class BookmarksTableComponent implements AfterViewInit, OnInit {
+  @ViewChild(MatPaginator) paginator!: MatPaginator;
+  @Input({ required: true }) bookmarks$!: Observable<Bookmark[]>;
+  // Emit an "Edit" event
+  @Output() editBookmark = new EventEmitter<VMBookmark>();
+  // Emit a delete event
+  @Output() deleteBookmark = new EventEmitter<VMBookmark>();
+  @Output() viewBookmark = new EventEmitter<VMBookmark>();
   displayedColumns: string[] = [
     'name',
     'url',
@@ -50,16 +57,6 @@ export class BookmarksTableComponent implements AfterViewInit, OnInit {
     'actions',
   ];
   dataSource!: MatTableDataSource<VMBookmark>;
-
-  @ViewChild(MatPaginator) paginator!: MatPaginator;
-
-  @Input({ required: true }) bookmarks$!: Observable<Bookmark[]>;
-
-  // Emit an "Edit" event
-  @Output() editBookmark = new EventEmitter<VMBookmark>();
-  // Emit a delete event
-  @Output() deleteBookmark = new EventEmitter<VMBookmark>();
-  @Output() viewBookmark = new EventEmitter<VMBookmark>();
 
   private destroyRef = inject(DestroyRef);
   private snackBar = inject(MatSnackBar);
@@ -71,15 +68,6 @@ export class BookmarksTableComponent implements AfterViewInit, OnInit {
 
   ngOnInit(): void {
     this.monitorBookmarks();
-  }
-
-  private monitorBookmarks() {
-    this.bookmarks$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((bookmarks) => {
-      this.dataSource = new MatTableDataSource<VMBookmark>(
-        BookmarksUtils.transformBookmarksToVM(bookmarks)
-      );
-      this.dataSource.paginator = this.paginator;
-    });
   }
 
   ngAfterViewInit(): void {
@@ -104,10 +92,18 @@ export class BookmarksTableComponent implements AfterViewInit, OnInit {
 
   onCopy(row: VMBookmark) {
     navigator.clipboard.writeText(row.url).then((r) => {
-      console.log('copied!');
       this.snackBar.open('Successfully copied url', '', {
         duration: 3000,
       });
+    });
+  }
+
+  private monitorBookmarks() {
+    this.bookmarks$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((bookmarks) => {
+      this.dataSource = new MatTableDataSource<VMBookmark>(
+        BookmarksUtils.transformBookmarksToVM(bookmarks)
+      );
+      this.dataSource.paginator = this.paginator;
     });
   }
 }

@@ -46,7 +46,6 @@ export class ModalService {
   ): void {
     const modalEl = document.createElement('phq-modal');
     document.body.appendChild(modalEl);
-    console.log('modalEl', modalEl);
     const compRef = this.appRef.bootstrap(ModalDialogComponent, modalEl);
     compRef.instance.onClose = () => this.close();
 
@@ -76,15 +75,6 @@ export class ModalService {
   }
 
   /**
-   * Creates and returns an instance of the `Injector` using the environment-specific injector.
-   *
-   * @return {Injector} The created injector instance.
-   */
-  private createInjector(): Injector {
-    return this.envInjector;
-  }
-
-  /**
    * Closes the modal if it is currently open. Destroys the reference to the modal and sets it to null.
    *
    * @return {void} Nothing is returned by this method.
@@ -94,5 +84,14 @@ export class ModalService {
       this.modalRef.destroy();
       this.modalRef = null;
     }
+  }
+
+  /**
+   * Creates and returns an instance of the `Injector` using the environment-specific injector.
+   *
+   * @return {Injector} The created injector instance.
+   */
+  private createInjector(): Injector {
+    return this.envInjector;
   }
 }

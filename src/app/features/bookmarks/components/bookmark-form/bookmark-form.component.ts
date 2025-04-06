@@ -57,15 +57,14 @@ export class BookmarkFormComponent implements OnInit, BaseFormInterface<UpdateBo
   // Input to determine orientation of the form i.e. horizontal or vertical
   @Input() orientation: 'horizontal' | 'vertical' = 'horizontal';
 
+  form!: FormGroup;
+  destroyRef = inject(DestroyRef);
+  fb = inject(FormBuilder);
+
   // set host css class based on the orientation input
   @HostBinding('class') get orientationClass() {
     return this.orientation; // Example for orientation class
   }
-
-  form!: FormGroup;
-  destroyRef = inject(DestroyRef);
-
-  constructor(private fb: FormBuilder) {}
 
   get urlControl() {
     return this.form.get('url');
@@ -76,7 +75,6 @@ export class BookmarkFormComponent implements OnInit, BaseFormInterface<UpdateBo
       url: ['', [Validators.required, BookmarksUtils.urlValidator()]],
       name: [''],
     });
-    console.log('form this.bookmark', this.bookmark);
     if (this.bookmark) {
       this.form.patchValue({
         url: this.bookmark.url,

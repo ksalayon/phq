@@ -49,7 +49,6 @@ export const bookmarksReducer = createReducer(
 
   // Create Bookmark
   on(BookmarksActions.createBookmark, (state, { payload }) => {
-    console.log('BookmarksActions.createBookmark', payload);
     return {
       ...state,
       loading: true,
@@ -58,7 +57,6 @@ export const bookmarksReducer = createReducer(
     };
   }),
   on(BookmarksActions.createBookmarkSuccess, (state, { bookmark }) => {
-    console.log('createBookmarkSuccess$', bookmark);
     return {
       ...bookmarksAdapter.addOne(bookmark, state),
       loading: false, // Ensure loading and isSubmitting flags are reset to false after success

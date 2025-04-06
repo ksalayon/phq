@@ -1,11 +1,11 @@
 import { ChangeDetectionStrategy, Component, DestroyRef, inject, OnInit } from '@angular/core';
 import { BookmarkFormComponent } from '../../components/bookmark-form/bookmark-form.component';
-import { CreateBookmarkPayload } from '../../models/bookmark';
+import { Bookmark, CreateBookmarkPayload } from '../../models/bookmark';
 import { Store } from '@ngrx/store';
 import { BookmarksActions } from '../../state/bookmarks.actions';
 import { BookmarksTableComponent } from '../../components/bookmarks-table/bookmarks-table.component';
 import { selectAllBookmarks } from '../../state/bookmarks.selectors';
-import { BehaviorSubject, Subject } from 'rxjs';
+import { BehaviorSubject, Observable, Subject } from 'rxjs';
 import { VMBookmark } from '../../components/bookmarks-table/bookmarks-table.models';
 import { ModalService } from '../../../../shared/services/modal-dialog.service';
 import { BookmarksUtils } from '../../utils/bookmark.util';
@@ -39,25 +39,30 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class BookmarksPageComponent implements OnInit {
-  private store = inject(Store);
-
-  constructor() {}
-
   isFormSubmittingSubject$: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(false);
   isFormSubmitting$ = this.isFormSubmittingSubject$.asObservable();
 
-  bookmarks$ = this.store.select(selectAllBookmarks);
-  bookmarkCreateErrorSubject$: Subject<string | null> | undefined = new Subject<string | null>();
-  bookmarkCreateError$ = this.bookmarkCreateErrorSubject$?.asObservable();
-
   bookmarkUpdateErrorSubject$: Subject<string | null> | undefined = new Subject<string | null>();
   bookmarkUpdateError$ = this.bookmarkUpdateErrorSubject$?.asObservable();
+  bookmarkCreateErrorSubject$: Subject<string | null> | undefined = new Subject<string | null>();
+  bookmarkCreateError$ = this.bookmarkCreateErrorSubject$?.asObservable();
 
   destroyRef = inject(DestroyRef);
   // modal service from shared directory
   modalService = inject(ModalService);
   bookmarkStateService = inject(BookmarkStateService);
+  private store = inject(Store);
+
   private router = inject(Router);
+
+  /**
+   * Retrieves an observable stream of all bookmarks from the store.
+   *
+   * @return {Observable<Array>} An observable emitting an array of all bookmarks.
+   */
+  get bookmarks$(): Observable<Bookmark[]> {
+    return this.store.select(selectAllBookmarks);
+  }
 
   ngOnInit() {
     this.store.dispatch(BookmarksActions.loadBookmarks());

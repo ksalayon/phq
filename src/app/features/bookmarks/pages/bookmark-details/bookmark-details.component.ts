@@ -24,8 +24,6 @@ import { MatButton } from '@angular/material/button';
   imports: [AsyncPipe, CommonModule, MatCardModule, MatButton, RouterLink],
 })
 export class BookmarkDetailsComponent implements OnInit {
-  private route = inject(ActivatedRoute); // Access the current route
-  private store = inject(Store); // Access the global NGRX store
   destroyRef = inject(DestroyRef);
 
   // Observable for the selected bookmark
@@ -34,12 +32,14 @@ export class BookmarkDetailsComponent implements OnInit {
   // for a newly created bookmark via /bookmarks/details/:id?new=true
   isForNewBookmark$: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(false);
 
-  queryParams$: Observable<any> = this.route.queryParamMap.pipe(
+  private route = inject(ActivatedRoute); // Access the current route
+  private queryParams$: Observable<any> = this.route.queryParamMap.pipe(
     map((queryParamMap) => ({
       // Map query params to an object
       new: queryParamMap.get('new'), //query param, "new", signifies that component is used for a newly created bookmark
     }))
   );
+  private store = inject(Store); // Access the global NGRX store
 
   ngOnInit() {
     // extract "new" from queryParams$ to determine whether to display a "thank you" message in the html

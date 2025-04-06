@@ -3,56 +3,25 @@ import { IDBPDatabase, openDB } from 'idb';
 import { Bookmark } from '../../models/bookmark';
 import { sampleBookmarks } from '../../utils/bookmarks.sample-data.util';
 
+const DB_NAME = 'BookmarksDB';
+const DB_VERSION = 3;
+
 @Injectable({
   providedIn: 'root',
 })
 export class IndexedDbService {
+  /**
+   * A Promise that resolves to an instance of an IndexedDB database.
+   * It provides a structured way to interact with the database using
+   * the IDB Database API
+   *
+   * @type {Promise<IDBPDatabase>}
+   */
   private dbPromise: Promise<IDBPDatabase>;
 
   constructor() {
     this.dbPromise = this.initializeDatabase();
     this.populateWithSampleData().then();
-  }
-
-  // Initialize the IndexedDB database
-  private async initializeDatabase(): Promise<IDBPDatabase> {
-    return openDB('BookmarksDB', 3, {
-      // Increment version
-      upgrade(db) {
-        if (!db.objectStoreNames.contains('bookmarks')) {
-          const store = db.createObjectStore('bookmarks', { keyPath: 'id' });
-          store.createIndex('url', 'url', { unique: true }); // Create `url` index
-        } else {
-          const store = db.transaction('bookmarks', 'versionchange').objectStore('bookmarks');
-          if (!store.indexNames.contains('url')) {
-            store.createIndex('url', 'url', { unique: true });
-          }
-        }
-      },
-    });
-  }
-
-  // Populate the database with sample data if empty
-  private async populateWithSampleData(): Promise<void> {
-    const db = await this.dbPromise;
-
-    // Check if the database is empty
-    const existingBookmarks = await db.getAll('bookmarks');
-    if (existingBookmarks.length === 0) {
-      console.log('Populating IndexedDB with sample bookmarks...');
-      const transaction = db.transaction('bookmarks', 'readwrite');
-      const store = transaction.objectStore('bookmarks');
-
-      // Add all sample bookmarks to the database
-      for (const bookmark of sampleBookmarks) {
-        await store.put(bookmark);
-      }
-
-      await transaction.done;
-      console.log('Sample bookmarks successfully added to IndexedDB.');
-    } else {
-      console.log('IndexedDB already contains bookmarks. No need to populate.');
-    }
   }
 
   // Save bookmark
@@ -96,7 +65,6 @@ export class IndexedDbService {
       const db = await this.dbPromise;
       return await db.getFromIndex('bookmarks', 'url', url); // `getFromIndex` allows querying by an index
     } catch (error) {
-      console.log('getBookmarkByUrl error', error);
       throw Error('Failed to get bookmark by URL.');
     }
   }
@@ -109,6 +77,44 @@ export class IndexedDbService {
       return id;
     } catch {
       throw Error('Failed to delete bookmark.');
+    }
+  }
+
+  // Initialize the IndexedDB database
+  private async initializeDatabase(): Promise<IDBPDatabase> {
+    return openDB(DB_NAME, DB_VERSION, {
+      // Increment version
+      upgrade(db) {
+        if (!db.objectStoreNames.contains('bookmarks')) {
+          const store = db.createObjectStore('bookmarks', { keyPath: 'id' });
+          store.createIndex('url', 'url', { unique: true }); // Create `url` index
+        } else {
+          const store = db.transaction('bookmarks', 'versionchange').objectStore('bookmarks');
+          if (!store.indexNames.contains('url')) {
+            store.createIndex('url', 'url', { unique: true });
+          }
+        }
+      },
+    });
+  }
+
+  // Populate the database with sample data if empty
+  private async populateWithSampleData(): Promise<void> {
+    const db = await this.dbPromise;
+
+    // Check if the database is empty
+    const existingBookmarks = await db.getAll('bookmarks');
+    // only populate 'IndexedDB if it does not already contain bookmarks.'
+    if (existingBookmarks.length === 0) {
+      const transaction = db.transaction('bookmarks', 'readwrite');
+      const store = transaction.objectStore('bookmarks');
+
+      // Add all sample bookmarks to the database
+      for (const bookmark of sampleBookmarks) {
+        await store.put(bookmark);
+      }
+
+      await transaction.done;
     }
   }
 }
