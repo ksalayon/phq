@@ -3,7 +3,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { Store } from '@ngrx/store';
 import { BehaviorSubject, Observable, withLatestFrom } from 'rxjs';
 import { map, switchMap, take } from 'rxjs/operators';
-import { selectBookmarkById } from '../../state/bookmarks.selectors'; // Selector to fetch bookmarks
+import { selectBookmarkById, selectError } from '../../state/bookmarks.selectors'; // Selector to fetch bookmarks
 import { Bookmark } from '../../models/bookmark';
 import { AsyncPipe, CommonModule } from '@angular/common';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -11,6 +11,7 @@ import { MatCardModule } from '@angular/material/card';
 import { MatButton } from '@angular/material/button';
 import { BookmarksActions } from '../../state/bookmarks.actions';
 import { DEFAULT_PAGE_SIZE, FIRST_PAGE_INDEX } from '../../models/bookmarks-table.models';
+import { MatProgressSpinner } from '@angular/material/progress-spinner';
 
 /**
  * BookmarkDetailsComponent is a standalone Angular component used to display the details of a specific bookmark.
@@ -23,13 +24,15 @@ import { DEFAULT_PAGE_SIZE, FIRST_PAGE_INDEX } from '../../models/bookmarks-tabl
   templateUrl: './bookmark-details.component.html',
   styleUrls: ['./bookmark-details.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [AsyncPipe, CommonModule, MatCardModule, MatButton],
+  imports: [AsyncPipe, CommonModule, MatCardModule, MatButton, MatProgressSpinner],
 })
 export class BookmarkDetailsComponent implements OnInit {
   destroyRef = inject(DestroyRef);
 
   // Observable for the selected bookmark
   bookmark$: Observable<Bookmark | undefined> | undefined;
+
+  error$: Observable<string | null> | undefined;
 
   // async property that the template uses to determine whether this page is being viewed
   // for a newly created bookmark via /bookmarks/details/:id?new=true
@@ -48,23 +51,8 @@ export class BookmarkDetailsComponent implements OnInit {
   private store = inject(Store); // Access the global NGRX store
 
   ngOnInit() {
-    // extract "new" from queryParams$ to determine whether to display a "thank you" message in the html
-    this.queryParams$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((queryParams) => {
-      if (queryParams.new) {
-        this.isForNewBookmark$.next(true);
-      }
-    });
-    // Extract the "id" from the route and fetch the bookmark from the store
-    this.bookmark$ = this.route.paramMap.pipe(
-      map((paramMap) => paramMap.get('id')), // Extract the "id" parameter
-      switchMap((id) => {
-        if (!id) return [undefined]; // Handle invalid "id" gracefully
-        // trigger fetch on specific bookmark. This is necessary for deep-linking to a specific bookmark too
-        this.store.dispatch(BookmarksActions.loadBookmark({ id }));
-        return this.store.select(selectBookmarkById(id)); // Use selector to fetch the bookmark
-      }),
-      takeUntilDestroyed(this.destroyRef)
-    );
+    this.watchQueryParams();
+    this.watchRouteParams();
   }
 
   /**
@@ -103,5 +91,34 @@ export class BookmarkDetailsComponent implements OnInit {
           })
           .then();
       });
+  }
+
+  // extract "new" from queryParams$ to determine whether to display a "thank you" message in the html
+  private watchQueryParams(): void {
+    this.route.queryParamMap.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((queryParams) => {
+      const isNew = queryParams.get('new');
+      this.isForNewBookmark$.next(!!isNew);
+    });
+  }
+
+  /**
+   * This method listens to route parameter changes and, based on the retrieved 'id', dispatches
+   * an action to load the corresponding bookmark. It then selects the bookmark data and
+   * error state from the store for further use.
+   *
+   * @return {void} No value is returned since this method sets up subscriptions for route
+   * parameters and state management updates.
+   */
+  private watchRouteParams(): void {
+    this.bookmark$ = this.route.paramMap.pipe(
+      map((paramMap) => paramMap.get('id')),
+      switchMap((id) => {
+        if (!id) return [undefined];
+        this.store.dispatch(BookmarksActions.loadBookmark({ id })); // Dispatch NGRX action to load the bookmark
+        return this.store.select(selectBookmarkById(id)); // Select the bookmark from what was added to the store
+      })
+    );
+
+    this.error$ = this.store.select(selectError); // Select the error state from the store
   }
 }

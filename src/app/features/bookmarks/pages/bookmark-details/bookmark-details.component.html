@@ -1,14 +1,13 @@
 <div class="top-bar">
   <button
-    *ngIf="bookmark$ | async as bookmark"
     mat-raised-button color="primary" (click)="backButtonHandler()" class="back-button">
     Back to Bookmarks
   </button>
 </div>
 
 <div class="main-content">
-  <ng-container *ngIf="bookmark$ | async as bookmark; else loading">
-    <ng-container *ngIf="bookmark; else notFound">
+  <ng-container *ngIf="bookmark$ | async as bookmark; else stateMessage">
+    <ng-container *ngIf="bookmark; else stateMessage">
       <ng-container *ngIf="isForNewBookmark$ | async">
         <h1 class="mat-display-2">Bookmark added!</h1>
         <h2 class="mat-h4">Thanks for your submission — your bookmark has been saved successfully.</h2>
@@ -26,11 +25,16 @@
     </ng-container>
   </ng-container>
 
-  <ng-template #loading>
-    <p>Loading bookmark...</p>
+  <!-- Loading or Error State -->
+  <ng-template #stateMessage>
+    <p *ngIf="error$ | async as error; else loading">
+      {{ error }}
+    </p>
+
+
+    <ng-template #loading>
+      <mat-progress-spinner mode="indeterminate"></mat-progress-spinner>
+    </ng-template>
   </ng-template>
 
-  <ng-template #notFound>
-    <p>The bookmark could not be found.</p>
-  </ng-template>
 </div>
