@@ -40,13 +40,36 @@ export class IndexedDbService {
   }
 
   // Get all bookmarks
-  async getBookmarks(): Promise<Bookmark[]> {
-    try {
-      const db = await this.dbPromise;
-      return await db.getAll('bookmarks');
-    } catch {
-      throw Error('Failed to get bookmarks.');
+  async getBookmarksCount(): Promise<number> {
+    const db = await this.dbPromise;
+    const transaction = db.transaction('bookmarks', 'readonly');
+    const store = transaction.objectStore('bookmarks');
+    // Get total count of all records
+    return await store.count();
+  }
+
+  // Fetch bookmarks in chunks (e.g., for lazy loading or pagination)
+  async getBookmarks(startIndex: number, limit: number): Promise<Bookmark[]> {
+    const db = await this.dbPromise;
+    const bookmarkStore = db.transaction('bookmarks', 'readonly').objectStore('bookmarks');
+
+    const bookmarks: Bookmark[] = [];
+    let cursor = await bookmarkStore.openCursor();
+    let currentIndex = 0;
+
+    console.log(`Fetching bookmarks, startIndex: ${startIndex}, limit: ${limit}`);
+
+    // Fetch only the requested range
+    while (cursor && bookmarks.length < limit) {
+      if (currentIndex >= startIndex) {
+        bookmarks.push(cursor.value as Bookmark);
+      }
+      cursor = await cursor.continue();
+      currentIndex++;
     }
+
+    console.log('Fetched bookmarks:', bookmarks);
+    return bookmarks;
   }
 
   // Get bookmark by ID

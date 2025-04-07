@@ -1,7 +1,7 @@
 import { Bookmark } from '../models/bookmark';
 
 const defaultNumbers = Object.freeze({
-  sampleLength: 100,
+  sampleLength: 50000,
   daysBack: 3,
   maxDaysBack: 10,
   minDaysBack: 1,

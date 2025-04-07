@@ -6,19 +6,21 @@ import {
   defaultBookmarkGroup,
   UpdateBookmarkPayload,
 } from '../models/bookmark';
-import { Store } from '@ngrx/store';
 import { IndexedDbService } from './persistence/indexed-db.service';
 import { switchMap, take } from 'rxjs/operators';
 
 @Injectable()
 export class BookmarkService {
-  private store = inject(Store);
   private indexedDbService = inject(IndexedDbService);
 
   constructor() {}
 
-  getBookmarks() {
-    return from(this.indexedDbService.getBookmarks());
+  getBookmarksPaginated(startIndex: number, limit: number) {
+    return from(this.indexedDbService.getBookmarks(startIndex, limit));
+  }
+
+  getBookmarksCount() {
+    return from(this.indexedDbService.getBookmarksCount());
   }
 
   getBookmark(id: Bookmark['id']) {

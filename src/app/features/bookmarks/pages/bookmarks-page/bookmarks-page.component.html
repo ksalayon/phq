@@ -7,8 +7,10 @@
 <div class="bookmarks__list">
   <phq-bookmarks-table
     [bookmarks$]="bookmarks$"
+    [totalCount]="(bookmarksTotalCount$ | async) || 0"
     (deleteBookmark)="onDeleteBookmark($event)"
     (editBookmark)="onEditBookmark($event)"
-    (viewBookmark)="onViewBookmark($event)">
+    (viewBookmark)="onViewBookmark($event)"
+    (pageChange)="onPaginatorChange($event)">
   </phq-bookmarks-table>
 </div>

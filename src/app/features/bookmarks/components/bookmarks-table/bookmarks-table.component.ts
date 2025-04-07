@@ -6,6 +6,7 @@ import {
   EventEmitter,
   inject,
   Input,
+  OnChanges,
   OnInit,
   Output,
   ViewChild,
@@ -15,13 +16,16 @@ import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
 import { CommonModule } from '@angular/common';
 import { VMBookmark } from './bookmarks-table.models';
 import { Bookmark } from '../../models/bookmark';
-import { Observable } from 'rxjs';
+import { Observable, tap } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MatMenu, MatMenuItem, MatMenuTrigger } from '@angular/material/menu';
 import { MatIcon } from '@angular/material/icon';
 import { MatIconButton } from '@angular/material/button';
 import { SnackbarService } from '../../../../shared/services/snackbar.service';
 import { TimeAgoDetailedPipe } from '../../../../shared/pipes/time-ago-detailed.pipe';
+import { BookmarksActions } from '../../state/bookmarks.actions';
+import { selectBookmarksTotalCount } from '../../state/bookmarks.selectors';
+import { Store } from '@ngrx/store';
 
 @Component({
   standalone: true,
@@ -41,14 +45,17 @@ import { TimeAgoDetailedPipe } from '../../../../shared/pipes/time-ago-detailed.
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class BookmarksTableComponent implements AfterViewInit, OnInit {
+export class BookmarksTableComponent implements AfterViewInit, OnInit, OnChanges {
   @ViewChild(MatPaginator) paginator!: MatPaginator;
   @Input({ required: true }) bookmarks$!: Observable<Bookmark[]>;
+  @Input({ required: true }) totalCount!: number;
   // Emit an "Edit" event
   @Output() editBookmark = new EventEmitter<VMBookmark>();
   // Emit a delete event
   @Output() deleteBookmark = new EventEmitter<VMBookmark>();
   @Output() viewBookmark = new EventEmitter<VMBookmark>();
+  @Output() pageChange = new EventEmitter<{ pageIndex: number; pageSize: number }>();
+
   displayedColumns: string[] = [
     'name',
     'url',
@@ -60,20 +67,43 @@ export class BookmarksTableComponent implements AfterViewInit, OnInit {
   dataSource!: MatTableDataSource<Bookmark>;
 
   private destroyRef = inject(DestroyRef);
-  // private snackBar = inject(MatSnackBar);
   private snackbarService = inject(SnackbarService);
-
-  constructor() {
-    // Initialize dataSource with the sample data
-    // this.dataSource = new MatTableDataSource(sampleBookmarks);
-  }
+  private store = inject(Store);
 
   ngOnInit(): void {
-    this.monitorBookmarks();
+    // Initialize dataSource with available bookmarks data
+    this.bookmarks$
+      .pipe(
+        takeUntilDestroyed(this.destroyRef),
+        tap((bookmarks) => {
+          this.dataSource = new MatTableDataSource<Bookmark>(bookmarks);
+          this.updatePaginator(); // Ensure paginator syncs with bookmarks
+        })
+      )
+      .subscribe();
+
+    this.store.select(selectBookmarksTotalCount).subscribe((count) => {
+      this.totalCount = count; // Update totalCount if not set explicitly
+      this.updatePaginator(); // Sync paginator when totalCount changes
+    });
+
+    // Dispatch initial load
+    this.store.dispatch(BookmarksActions.loadBookmarks({ startIndex: 0, limit: 20 }));
   }
 
   ngAfterViewInit(): void {
     this.dataSource.paginator = this.paginator;
+    this.updatePaginator(); // Ensure paginator length is updated properly
+  }
+
+  ngOnChanges() {
+    if (this.totalCount !== undefined && this.paginator) {
+      this.updatePaginator();
+    }
+  }
+
+  onPageChange(event: any) {
+    this.pageChange.emit({ pageIndex: event.pageIndex, pageSize: event.pageSize });
   }
 
   onEdit(row: VMBookmark) {
@@ -98,10 +128,9 @@ export class BookmarksTableComponent implements AfterViewInit, OnInit {
     });
   }
 
-  private monitorBookmarks() {
-    this.bookmarks$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((bookmarks) => {
-      this.dataSource = new MatTableDataSource<Bookmark>(bookmarks);
-      this.dataSource.paginator = this.paginator;
-    });
+  private updatePaginator(): void {
+    if (this.paginator) {
+      this.paginator.length = this.totalCount; // Total number of records
+    }
   }
 }

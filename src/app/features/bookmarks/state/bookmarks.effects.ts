@@ -52,14 +52,20 @@ export class BookmarksEffects {
   loadBookmarks$ = createEffect(() =>
     this.actions$.pipe(
       ofType(BookmarksActions.loadBookmarks),
-      mergeMap(() =>
-        this.bookmarkService.getBookmarks().pipe(
-          map((bookmarks) => {
-            return BookmarksActions.loadBookmarksSuccess({ bookmarks });
+      mergeMap(({ startIndex, limit }) => {
+        return this.bookmarkService.getBookmarksPaginated(startIndex, limit).pipe(
+          mergeMap((bookmarks) => {
+            return this.bookmarkService.getBookmarksCount().pipe(
+              map((totalCount) => {
+                return BookmarksActions.loadBookmarksSuccess({ bookmarks, totalCount });
+              })
+            );
           }),
-          catchError((error) => of(BookmarksActions.loadBookmarksFailure({ error: error.message })))
-        )
-      )
+          catchError((error) => {
+            return of(BookmarksActions.loadBookmarksFailure({ error: error.message }));
+          })
+        );
+      })
     )
   );
 

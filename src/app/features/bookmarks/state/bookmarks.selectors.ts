@@ -31,3 +31,15 @@ export const selectIsSubmitting = createSelector(
   selectBookmarksState,
   (state) => state.isSubmitting
 );
+
+// Select current bookmarks page from state
+export const selectCurrentPageBookmarks = createSelector(
+  selectBookmarksState,
+  (state) => state.currentPage || []
+);
+
+// Select total count of bookmarks
+export const selectBookmarksTotalCount = createSelector(
+  selectBookmarksState,
+  (state) => state.totalCount
+);

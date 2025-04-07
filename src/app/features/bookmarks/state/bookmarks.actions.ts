@@ -1,4 +1,4 @@
-import { createActionGroup, emptyProps, props } from '@ngrx/store';
+import { createActionGroup, props } from '@ngrx/store';
 import { Bookmark, CreateBookmarkPayload, UpdateBookmarkPayload } from '../models/bookmark';
 
 /**
@@ -10,8 +10,8 @@ import { Bookmark, CreateBookmarkPayload, UpdateBookmarkPayload } from '../model
 export const BookmarksActions = createActionGroup({
   source: 'bookmarks',
   events: {
-    'Load Bookmarks': emptyProps(),
-    'Load Bookmarks Success': props<{ bookmarks: Bookmark[] }>(),
+    'Load Bookmarks': props<{ startIndex: number; limit: number }>(),
+    'Load Bookmarks Success': props<{ bookmarks: Bookmark[]; totalCount: number }>(),
     'Load Bookmarks Failure': props<{ error: string }>(),
     'Load Bookmark': props<{ id: Bookmark['id'] }>(),
     'Load Bookmark Success': props<{ bookmark: Bookmark }>(),

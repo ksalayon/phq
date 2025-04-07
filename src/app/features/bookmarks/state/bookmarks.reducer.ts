@@ -10,6 +10,8 @@ export interface BookmarksState extends EntityState<Bookmark> {
   error: string | null;
   loading: boolean;
   isSubmitting: boolean;
+  totalCount: number;
+  currentPage?: Bookmark[]; // Only the current page of data
 }
 
 export const bookmarksAdapter: EntityAdapter<Bookmark> = createEntityAdapter<Bookmark>({
@@ -20,6 +22,8 @@ export const initialState: BookmarksState = bookmarksAdapter.getInitialState({
   error: null,
   loading: false,
   isSubmitting: false,
+  totalCount: 0,
+  currentPage: [],
 });
 
 export const bookmarksReducer = createReducer(
@@ -27,8 +31,15 @@ export const bookmarksReducer = createReducer(
 
   // Load Bookmarks (All)
   on(BookmarksActions.loadBookmarks, (state) => ({ ...state, loading: true })),
-  on(BookmarksActions.loadBookmarksSuccess, (state, { bookmarks }) => {
-    return bookmarksAdapter.setAll(bookmarks, { ...state, loading: false, error: null });
+  on(BookmarksActions.loadBookmarksSuccess, (state, { bookmarks, totalCount }) => {
+    console.log('Reducer: Updating totalCount to:', totalCount);
+    return {
+      ...state,
+      currentPage: bookmarks,
+      totalCount, // Ensure totalCount doesn't reset or change to unexpected values
+      loading: false,
+      error: null,
+    };
   }),
   on(BookmarksActions.loadBookmarksFailure, (state, { error }) => ({
     ...state,

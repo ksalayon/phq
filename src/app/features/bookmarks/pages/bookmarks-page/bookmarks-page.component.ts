@@ -4,7 +4,10 @@ import { Bookmark, CreateBookmarkPayload } from '../../models/bookmark';
 import { Store } from '@ngrx/store';
 import { BookmarksActions } from '../../state/bookmarks.actions';
 import { BookmarksTableComponent } from '../../components/bookmarks-table/bookmarks-table.component';
-import { selectAllBookmarks } from '../../state/bookmarks.selectors';
+import {
+  selectBookmarksTotalCount,
+  selectCurrentPageBookmarks,
+} from '../../state/bookmarks.selectors';
 import { BehaviorSubject, Observable, Subject } from 'rxjs';
 import { VMBookmark } from '../../components/bookmarks-table/bookmarks-table.models';
 import { ModalService } from '../../../../shared/services/modal-dialog.service';
@@ -14,6 +17,10 @@ import { BookmarkStateService } from '../../services/bookmark-state.service';
 import { Router } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { SnackbarService } from '../../../../shared/services/snackbar.service';
+import { AsyncPipe } from '@angular/common';
+
+const FIRST_PAGE_INDEX = 0;
+const DEFUALT_PAGE_SIZE = 20;
 
 /**
  * BookmarksPageComponent is a container component that provides functionality for managing bookmarks.
@@ -34,7 +41,7 @@ import { SnackbarService } from '../../../../shared/services/snackbar.service';
 @Component({
   standalone: true,
   selector: 'phq-bookmarks-page',
-  imports: [BookmarkFormComponent, BookmarksTableComponent],
+  imports: [BookmarkFormComponent, BookmarksTableComponent, AsyncPipe],
   templateUrl: './bookmarks-page.component.html',
   styleUrl: './bookmarks-page.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -43,6 +50,9 @@ import { SnackbarService } from '../../../../shared/services/snackbar.service';
 export class BookmarksPageComponent implements OnInit {
   isFormSubmittingSubject$: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(false);
   isFormSubmitting$ = this.isFormSubmittingSubject$.asObservable();
+
+  pageIndex = FIRST_PAGE_INDEX; // Starting at the first page
+  pageSize = DEFUALT_PAGE_SIZE; // Default page size (matches MatPaginator)
 
   bookmarkUpdateErrorSubject$: Subject<string | null> | undefined = new Subject<string | null>();
   bookmarkUpdateError$ = this.bookmarkUpdateErrorSubject$?.asObservable();
@@ -64,11 +74,28 @@ export class BookmarksPageComponent implements OnInit {
    * @return {Observable<Array>} An observable emitting an array of all bookmarks.
    */
   get bookmarks$(): Observable<Bookmark[]> {
-    return this.store.select(selectAllBookmarks);
+    return this.store.select(selectCurrentPageBookmarks);
+  }
+
+  get bookmarksTotalCount$() {
+    return this.store.select(selectBookmarksTotalCount);
   }
 
   ngOnInit() {
-    this.store.dispatch(BookmarksActions.loadBookmarks());
+    this.loadBookmarks();
+  }
+
+  // Method to load bookmarks for the current page
+  loadBookmarks() {
+    const startIndex = this.pageIndex * this.pageSize;
+    this.store.dispatch(BookmarksActions.loadBookmarks({ startIndex, limit: this.pageSize }));
+  }
+
+  // Handle paginator events
+  onPaginatorChange(event: { pageIndex: number; pageSize: number }) {
+    this.pageIndex = event.pageIndex;
+    this.pageSize = event.pageSize;
+    this.loadBookmarks(); // Reload data with new pagination settings
   }
 
   /**
