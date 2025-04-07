@@ -1,4 +1,4 @@
-<div *ngIf="(bookmarksTotalCount$ | async) === 0" class="empty-state">
+<div *ngIf="(bookmarksTotalCount$ | async) === 0 && (loading$ | async) === false" class="empty-state">
   <p class="empty-message">
     There are no bookmarks yet - start adding them!
   </p>
