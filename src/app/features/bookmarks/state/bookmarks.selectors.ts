@@ -36,13 +36,16 @@ export const selectIsSubmitting = createSelector(
 );
 
 // Select current bookmarks page from state
-export const selectCurrentPageBookmarks = (pageIndex: number, pageSize: number) => {
-  return createSelector(selectAll, (bookmarks) => {
+export const selectCurrentPageBookmarks = (pageIndex: number, pageSize: number) =>
+  createSelector(selectAll, (bookmarks) => {
+    // Ensure bookmarks are always sorted before slicing
+    const sortedBookmarks = [...bookmarks].sort(BookmarksUtils.compareByDates);
+
     const start = pageIndex * pageSize;
     const end = start + pageSize;
-    return bookmarks.slice(start, end);
+    // Return the correct slice of data
+    return sortedBookmarks.slice(start, end);
   });
-};
 
 export const selectCurrentPage = createSelector(
   selectAll, // Get all entities as an array

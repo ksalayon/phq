@@ -20,7 +20,7 @@ import { SnackbarService } from '../../../../shared/services/snackbar.service';
 import { AsyncPipe } from '@angular/common';
 
 const FIRST_PAGE_INDEX = 0;
-const DEFUALT_PAGE_SIZE = 20;
+const DEFAULT_PAGE_SIZE = 20;
 
 /**
  * BookmarksPageComponent is a container component that provides functionality for managing bookmarks.
@@ -52,7 +52,7 @@ export class BookmarksPageComponent implements OnInit {
   isFormSubmitting$ = this.isFormSubmittingSubject$.asObservable();
 
   pageIndex = FIRST_PAGE_INDEX; // Starting at the first page
-  pageSize = DEFUALT_PAGE_SIZE; // Default page size (matches MatPaginator)
+  pageSize = DEFAULT_PAGE_SIZE; // Default page size (matches MatPaginator)
 
   bookmarkUpdateErrorSubject$: Subject<string | null> | undefined = new Subject<string | null>();
   bookmarkUpdateError$ = this.bookmarkUpdateErrorSubject$?.asObservable();
@@ -126,6 +126,7 @@ export class BookmarksPageComponent implements OnInit {
         }
       });
     this.store.dispatch(BookmarksActions.createBookmark({ payload: $event }));
+    this.pageIndex = 0; // Reset to the first page to ensure new data is shown
   }
 
   // Handle bookmark deletion

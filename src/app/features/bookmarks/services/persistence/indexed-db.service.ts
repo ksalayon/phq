@@ -4,8 +4,13 @@ import { Bookmark } from '../../models/bookmark';
 import { sampleBookmarks } from '../../utils/bookmarks.sample-data.util';
 
 const DB_NAME = 'BookmarksDB';
-const DB_VERSION = 3;
+const DB_VERSION = 7;
 
+/**
+ * Service responsible for interacting with an IndexedDB instance for managing bookmarks.
+ * It provides functionalities such as saving, retrieving, updating, and deleting bookmarks,
+ * with support for features like pagination and indexing.
+ */
 @Injectable({
   providedIn: 'root',
 })
@@ -32,7 +37,13 @@ export class IndexedDbService {
       if (existingBookmark && existingBookmark.id !== bookmark.id) {
         throw Error('A bookmark with the same URL already exists.');
       }
-      await db.put('bookmarks', { ...existingBookmark, ...bookmark });
+      if (!bookmark.createdAt) {
+        bookmark.createdAt = new Date();
+      }
+      bookmark.modifiedAt = new Date();
+
+      // Only include existingBookmark properties if it is defined
+      await db.put('bookmarks', { ...(existingBookmark ?? {}), ...bookmark });
       return bookmark;
     } catch (error) {
       throw new Error(error instanceof Error ? error.message : 'Failed to save bookmark.');
@@ -48,18 +59,35 @@ export class IndexedDbService {
     return await store.count();
   }
 
-  // Fetch bookmarks in chunks (e.g., for lazy loading or pagination)
+  /**
+   * Retrieves a list of bookmarks from the database, ordered by the `createdAt` index in descending order.
+   * This method supports pagination by specifying the `startIndex` and `limit` parameters.
+   *
+   * @param {number} startIndex - The starting index of the bookmarks to retrieve.
+   *                              Items before this index will be skipped.
+   * @param {number} limit - The maximum number of bookmarks to retrieve.
+   * @return {Promise<Bookmark[]>} A promise that resolves to an array of bookmarks.
+   *                                The array will contain at most `limit` bookmarks.
+   *                                The bookmarks are returned in descending order of `createdAt`.
+   */
   async getBookmarks(startIndex: number, limit: number): Promise<Bookmark[]> {
     const db = await this.dbPromise;
-    const bookmarkStore = db.transaction('bookmarks', 'readonly').objectStore('bookmarks');
+    const transaction = db.transaction('bookmarks', 'readonly');
+    const store = transaction.objectStore('bookmarks');
+    // Ensure the `createdAt` index exists and is referenced
+    if (!store.indexNames.contains('createdAt')) {
+      throw Error('The `createdAt` index is missing');
+    }
+    // Use the createdAt index to ensure that we are fetching bookmarks in the correct order
+    // and so that the indexes are in sync with NgRx especially when we are adding new items
+    const index = store.index('createdAt');
 
     const bookmarks: Bookmark[] = [];
-    let cursor = await bookmarkStore.openCursor();
+    let cursor = await index.openCursor(null, 'prev'); // 'prev' ensures descending order
+
+    // Skip the initial items to handle pagination
     let currentIndex = 0;
 
-    console.log(`Fetching bookmarks, startIndex: ${startIndex}, limit: ${limit}`);
-
-    // Fetch only the requested range
     while (cursor && bookmarks.length < limit) {
       if (currentIndex >= startIndex) {
         bookmarks.push(cursor.value as Bookmark);
@@ -68,7 +96,6 @@ export class IndexedDbService {
       currentIndex++;
     }
 
-    console.log('Fetched bookmarks:', bookmarks);
     return bookmarks;
   }
 
@@ -107,14 +134,29 @@ export class IndexedDbService {
   private async initializeDatabase(): Promise<IDBPDatabase> {
     return openDB(DB_NAME, DB_VERSION, {
       // Increment version
-      upgrade(db) {
-        if (!db.objectStoreNames.contains('bookmarks')) {
+      upgrade(db, oldVersion, newVersion, transaction) {
+        if (oldVersion < 1) {
+          // Create the bookmarks object store
           const store = db.createObjectStore('bookmarks', { keyPath: 'id' });
-          store.createIndex('url', 'url', { unique: true }); // Create `url` index
-        } else {
-          const store = db.transaction('bookmarks', 'versionchange').objectStore('bookmarks');
+
+          // Add the `url` index with uniqueness
+          store.createIndex('url', 'url', { unique: true });
+
+          // Add the `createdAt` index
+          store.createIndex('createdAt', 'createdAt');
+        }
+        // For upgrading older versions, ensure any missing index is added
+        if (oldVersion < DB_VERSION) {
+          const store = transaction.objectStore('bookmarks');
+
+          // Add the `url` index if it doesn't already exist
           if (!store.indexNames.contains('url')) {
             store.createIndex('url', 'url', { unique: true });
+          }
+
+          // Add the `createdAt` index if it doesn't already exist
+          if (!store.indexNames.contains('createdAt')) {
+            store.createIndex('createdAt', 'createdAt');
           }
         }
       },

@@ -72,6 +72,7 @@ export class BookmarkService {
       ...bookmark,
       id: uniqueId,
       createdAt: currentDate,
+      modifiedAt: currentDate,
       bookmarkGroupId: defaultBookmarkGroup.name,
     } as Bookmark;
     return from(this.indexedDbService.saveBookmark(newBookmark));
