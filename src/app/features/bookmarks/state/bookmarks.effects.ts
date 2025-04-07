@@ -5,7 +5,7 @@
 
 import { inject, Injectable } from '@angular/core';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
-import { catchError, map, mergeMap, take } from 'rxjs/operators';
+import { catchError, map, mergeMap, switchMap, take } from 'rxjs/operators';
 import { BookmarksActions } from './bookmarks.actions';
 import { BookmarkService } from '../services/bookmark.service';
 import { of } from 'rxjs';
@@ -32,7 +32,7 @@ export class BookmarksEffects {
   loadBookmark$ = createEffect(() =>
     this.actions$.pipe(
       ofType(BookmarksActions.loadBookmark),
-      mergeMap(({ id }) =>
+      switchMap(({ id }) =>
         this.bookmarkService.getBookmark(id).pipe(
           map((bookmark) => {
             if (!bookmark) {
@@ -52,7 +52,7 @@ export class BookmarksEffects {
   loadBookmarks$ = createEffect(() =>
     this.actions$.pipe(
       ofType(BookmarksActions.loadBookmarks),
-      mergeMap(({ startIndex, limit }) => {
+      switchMap(({ startIndex, limit }) => {
         return this.bookmarkService.getBookmarksPaginated(startIndex, limit).pipe(
           mergeMap((bookmarks) => {
             return this.bookmarkService.getBookmarksCount().pipe(
