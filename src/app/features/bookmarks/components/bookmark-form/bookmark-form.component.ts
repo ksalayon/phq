@@ -2,12 +2,14 @@ import {
   ChangeDetectionStrategy,
   Component,
   DestroyRef,
+  ElementRef,
   EventEmitter,
   HostBinding,
   inject,
   Input,
   OnInit,
   Output,
+  ViewChild,
 } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Bookmark, UpdateBookmarkPayload } from '../../models/bookmark';
@@ -49,10 +51,32 @@ import { BaseFormInterface } from '../../../../shared/models/base-form.interface
   ],
 })
 export class BookmarkFormComponent implements OnInit, BaseFormInterface<UpdateBookmarkPayload> {
+  // Reference to the 'url' input field
+  @ViewChild('urlInput', { read: ElementRef }) urlInput!: ElementRef;
+  /**
+   * Represents an optional bookmark object.
+   * This variable can hold data related to a bookmark, such as its details or settings.
+   * The variable may be undefined if no bookmark exists or is not assigned.
+   */
   @Input() bookmark?: Bookmark;
+  /**
+   * Represents an observable stream that emits the loading state as a boolean value.
+   * The observable emits `true` when a loading process is active and `false` when the process is complete.
+   */
   @Input({ required: true }) isLoading$!: Observable<boolean>;
+  /**
+   * An event emitter that emits events related to updating a bookmark.
+   * This allows subscribers to listen for and handle update bookmark events.
+   */
   @Output() submitted = new EventEmitter<UpdateBookmarkPayload>();
+  /**
+   * An optional Observable that emits either a string or null,
+   * representing an error message or the absence of an error.
+   */
   @Input() error$?: Observable<string | null>;
+  /**
+   * An event emitter that signals when a specific action or process has been completed or closed.
+   */
   @Output() closed = new EventEmitter<void>();
   // Input to determine orientation of the form i.e. horizontal or vertical
   @Input() orientation: 'horizontal' | 'vertical' = 'horizontal';
@@ -66,6 +90,9 @@ export class BookmarkFormComponent implements OnInit, BaseFormInterface<UpdateBo
     return this.orientation; // Example for orientation class
   }
 
+  /**
+   * Gets the FormControl instance associated with the 'url' field in the form.
+   */
   get urlControl() {
     return this.form.get('url');
   }
@@ -110,6 +137,13 @@ export class BookmarkFormComponent implements OnInit, BaseFormInterface<UpdateBo
       this.form.markAsPristine();
       this.form.markAsUntouched(); // Ensure the form is "reset" visually
       this.form.updateValueAndValidity(); // Re-evaluate validity after reset
+    }
+  }
+
+  // Public method to focus on the URL input field
+  focusUrl(): void {
+    if (this.urlInput) {
+      this.urlInput.nativeElement.focus();
     }
   }
 }

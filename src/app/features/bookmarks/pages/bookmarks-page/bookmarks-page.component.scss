@@ -16,7 +16,7 @@
 
   /* Table of lists below the form */
 
-  .bookmarks__list {
+  .bookmarks__list, .empty-state {
     grid-column: 1; /* Occupies the first column */
     grid-row: 2; /* Position in the second row */
     height: 100%; /* Fill the remaining vertical space */
@@ -34,4 +34,26 @@
     align-items: center;
     height: 100%; // Matches table height
   }
+
+  .empty-state {
+    text-align: center;
+    margin: 2rem;
+
+    .empty-message {
+      font-size: 1.2rem;
+      color: #6c757d;
+      margin-bottom: 1rem;
+    }
+
+    button {
+      margin-top: 1rem;
+    }
+  }
+
+  .bookmarks__list,
+  phq-bookmark-form {
+    margin-top: 2rem;
+  }
+
+
 }

@@ -1,4 +1,11 @@
-import { ChangeDetectionStrategy, Component, DestroyRef, inject, OnInit } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  DestroyRef,
+  inject,
+  OnInit,
+  ViewChild,
+} from '@angular/core';
 import { BookmarkFormComponent } from '../../components/bookmark-form/bookmark-form.component';
 import { Bookmark, CreateBookmarkPayload, CurrentPageState } from '../../models/bookmark';
 import { Store } from '@ngrx/store';
@@ -25,6 +32,9 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { SnackbarService } from '../../../../shared/services/snackbar.service';
 import { AsyncPipe, CommonModule } from '@angular/common';
 import { MatProgressSpinner } from '@angular/material/progress-spinner';
+import { MatTooltip } from '@angular/material/tooltip';
+import { map } from 'rxjs/operators';
+import { MatButton } from '@angular/material/button';
 
 /**
  * BookmarksPageComponent is a container component that provides functionality for managing bookmarks.
@@ -51,6 +61,8 @@ import { MatProgressSpinner } from '@angular/material/progress-spinner';
     BookmarksTableComponent,
     AsyncPipe,
     MatProgressSpinner,
+    MatTooltip,
+    MatButton,
   ],
   templateUrl: './bookmarks-page.component.html',
   styleUrl: './bookmarks-page.component.scss',
@@ -58,6 +70,9 @@ import { MatProgressSpinner } from '@angular/material/progress-spinner';
   providers: [SnackbarService],
 })
 export class BookmarksPageComponent implements OnInit {
+  // Access the child phq-bookmark-form component
+  @ViewChild(BookmarkFormComponent) bookmarkFormComponent!: BookmarkFormComponent;
+
   isFormSubmittingSubject$: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(false);
   isFormSubmitting$ = this.isFormSubmittingSubject$.asObservable();
 
@@ -97,8 +112,8 @@ export class BookmarksPageComponent implements OnInit {
    *
    * @return {Observable<number>} An Observable emitting the current total count of bookmarks from the store.
    */
-  get bookmarksTotalCount$() {
-    return this.store.select(selectBookmarksTotalCount);
+  get bookmarksTotalCount$(): Observable<number> {
+    return this.store.select(selectBookmarksTotalCount).pipe(map((count) => count ?? 0));
   }
 
   /**
@@ -286,5 +301,12 @@ export class BookmarksPageComponent implements OnInit {
     this.router.navigate(['/bookmarks/details', bookmark.id], {
       queryParams: { pageIndex: this.pageIndex, pageSize: this.pageSize },
     });
+  }
+
+  /**
+   * Method to focus the URL input from BookmarkFormComponent.
+   */
+  focusOnForm(): void {
+    this.bookmarkFormComponent?.focusUrl();
   }
 }

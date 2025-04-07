@@ -1,11 +1,24 @@
+<div *ngIf="(bookmarksTotalCount$ | async) === 0" class="empty-state">
+  <p class="empty-message">
+    There are no bookmarks yet - start adding them!
+  </p>
+  <button mat-raised-button color="primary" (click)="focusOnForm()">Create Your First Bookmark</button>
+</div>
+
+
 <phq-bookmark-form
   (submitted)="onCreateBookmark($event)"
   [isLoading$]="isFormSubmitting$"
-  [error$]="bookmarkCreateError$">
+  [error$]="bookmarkCreateError$"
+  matTooltip="Add a bookmark by entering a name and URL, then submit"
+  [matTooltipDisabled]="!!((bookmarksTotalCount$ | async) ?? 0 > 0)"
+
+>
 </phq-bookmark-form>
 
 <div class="bookmarks__list">
   <phq-bookmarks-table
+    *ngIf="(bookmarksTotalCount$ | async) ?? 0 > 0"
     [bookmarks$]="bookmarks$"
     [totalCount]="(bookmarksTotalCount$ | async) || 0"
     [loading$]="loading$"
