@@ -5,8 +5,16 @@
   "compilerOptions": {
     "outDir": "./out-tsc/spec",
     "types": [
-      "jasmine"
-    ]
+      "jest",
+      "node"
+    ],
+    // Include Jest and Node types
+    "esModuleInterop": true,
+    "emitDecoratorMetadata": true,
+    "target": "ES2022",
+    // Match your TypeScript `target`
+    "module": "CommonJS"
+    // REQUIRED for Jest to process TypeScript properly
   },
   "include": [
     "src/**/*.spec.ts",
