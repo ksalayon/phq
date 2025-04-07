@@ -51,7 +51,7 @@ export class BookmarksTableComponent implements AfterViewInit, OnInit, OnChanges
   @ViewChild(MatPaginator) paginator!: MatPaginator;
   @Input({ required: true }) bookmarks$!: Observable<Bookmark[]>;
   @Input({ required: true }) totalCount!: number;
-  @Input({ required: true }) currentPageState!: CurrentPageState;
+  @Input({ required: true }) currentPageState$!: Observable<CurrentPageState>;
   // Emit an "Edit" event
   @Output() editBookmark = new EventEmitter<VMBookmark>();
   // Emit a delete event
@@ -86,6 +86,17 @@ export class BookmarksTableComponent implements AfterViewInit, OnInit, OnChanges
         takeUntilDestroyed(this.destroyRef)
       )
       .subscribe();
+
+    this.currentPageState$
+      .pipe(
+        tap((pageState) => {
+          this.currentPageIndex = pageState.pageIndex;
+          this.currentPageSize = pageState.pageSize;
+          this.updatePaginator();
+        }),
+        takeUntilDestroyed(this.destroyRef)
+      )
+      .subscribe();
   }
 
   ngAfterViewInit(): void {
@@ -95,12 +106,6 @@ export class BookmarksTableComponent implements AfterViewInit, OnInit, OnChanges
 
   ngOnChanges() {
     if (this.totalCount !== undefined && this.paginator) {
-      this.updatePaginator();
-    }
-
-    if (this.currentPageState) {
-      this.currentPageIndex = this.currentPageState.pageIndex;
-      this.currentPageSize = this.currentPageState.pageSize;
       this.updatePaginator();
     }
   }

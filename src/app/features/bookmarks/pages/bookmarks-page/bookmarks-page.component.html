@@ -8,6 +8,7 @@
   <phq-bookmarks-table
     [bookmarks$]="bookmarks$"
     [totalCount]="(bookmarksTotalCount$ | async) || 0"
+    [currentPageState$]="currentPageState$"
     (deleteBookmark)="onDeleteBookmark($event)"
     (editBookmark)="onEditBookmark($event)"
     (viewBookmark)="onViewBookmark($event)"

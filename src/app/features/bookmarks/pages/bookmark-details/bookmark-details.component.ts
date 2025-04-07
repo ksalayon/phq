@@ -9,6 +9,7 @@ import { AsyncPipe, CommonModule } from '@angular/common';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MatCardModule } from '@angular/material/card';
 import { MatButton } from '@angular/material/button';
+import { BookmarksActions } from '../../state/bookmarks.actions';
 
 /**
  * BookmarkDetailsComponent is a standalone Angular component used to display the details of a specific bookmark.
@@ -58,6 +59,8 @@ export class BookmarkDetailsComponent implements OnInit {
       map((paramMap) => paramMap.get('id')), // Extract the "id" parameter
       switchMap((id) => {
         if (!id) return [undefined]; // Handle invalid "id" gracefully
+        // trigger fetch on specific bookmark. This is necessary for deep-linking to a specific bookmark too
+        this.store.dispatch(BookmarksActions.loadBookmark({ id }));
         return this.store.select(selectBookmarkById(id)); // Use selector to fetch the bookmark
       })
     );
