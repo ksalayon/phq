@@ -1,3 +1,7 @@
+:host {
+  position: relative;
+}
+
 .table-container {
   position: relative;
   max-height: 80vh;
@@ -15,3 +19,8 @@
     border-top: 1px solid #e0e0e0;
   }
 }
+
+.loading-table {
+  opacity: 0.5; // Optionally dim the table when loading
+}
+

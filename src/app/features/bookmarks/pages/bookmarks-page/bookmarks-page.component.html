@@ -8,10 +8,14 @@
   <phq-bookmarks-table
     [bookmarks$]="bookmarks$"
     [totalCount]="(bookmarksTotalCount$ | async) || 0"
+    [loading$]="loading$"
     [currentPageState$]="currentPageState$"
     (deleteBookmark)="onDeleteBookmark($event)"
     (editBookmark)="onEditBookmark($event)"
     (viewBookmark)="onViewBookmark($event)"
     (pageChange)="onPaginatorChange($event)">
   </phq-bookmarks-table>
+</div>
+<div class="loading-container" *ngIf="loading$ | async">
+  <mat-spinner></mat-spinner>
 </div>

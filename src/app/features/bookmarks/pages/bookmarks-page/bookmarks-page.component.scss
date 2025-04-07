@@ -24,4 +24,14 @@
     padding: 1rem; /* Optional padding, adjust as needed */
     background-color: #fff; /* Optional styling, modify as needed */
   }
+
+  .loading-container {
+    position: absolute;
+    width: 100%;
+    z-index: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%; // Matches table height
+  }
 }

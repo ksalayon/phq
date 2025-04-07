@@ -8,6 +8,7 @@ import {
   selectBookmarksTotalCount,
   selectCurrentPageBookmarks,
   selectCurrentPageState,
+  selectLoading,
 } from '../../state/bookmarks.selectors';
 import { BehaviorSubject, Observable, Subject } from 'rxjs';
 import {
@@ -22,7 +23,8 @@ import { BookmarkStateService } from '../../services/bookmark-state.service';
 import { ActivatedRoute, Router } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { SnackbarService } from '../../../../shared/services/snackbar.service';
-import { AsyncPipe } from '@angular/common';
+import { AsyncPipe, CommonModule } from '@angular/common';
+import { MatProgressSpinner } from '@angular/material/progress-spinner';
 
 /**
  * BookmarksPageComponent is a container component that provides functionality for managing bookmarks.
@@ -43,9 +45,15 @@ import { AsyncPipe } from '@angular/common';
 @Component({
   standalone: true,
   selector: 'phq-bookmarks-page',
-  imports: [BookmarkFormComponent, BookmarksTableComponent, AsyncPipe],
+  imports: [
+    CommonModule,
+    BookmarkFormComponent,
+    BookmarksTableComponent,
+    AsyncPipe,
+    MatProgressSpinner,
+  ],
   templateUrl: './bookmarks-page.component.html',
-  styleUrl: './bookmarks-page.component.css',
+  styleUrl: './bookmarks-page.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   providers: [SnackbarService],
 })
@@ -80,6 +88,10 @@ export class BookmarksPageComponent implements OnInit {
     return this.store.select(selectCurrentPageBookmarks(this.pageIndex, this.pageSize));
   }
 
+  get loading$(): Observable<boolean> {
+    return this.store.select(selectLoading);
+  }
+
   /**
    * Getter method that retrieves an Observable representing the total count of bookmarks.
    *
@@ -102,7 +114,7 @@ export class BookmarksPageComponent implements OnInit {
 
   ngOnInit() {
     // Listens to pagination changes and loads bookmarks with those changes
-    this.currentPageState$.subscribe((pageState) => {
+    this.currentPageState$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((pageState) => {
       this.pageIndex = pageState?.pageIndex || 0;
       this.pageSize = pageState?.pageSize || DEFAULT_PAGE_SIZE;
       this.loadBookmarks(); // Load the page based on saved state
@@ -110,7 +122,7 @@ export class BookmarksPageComponent implements OnInit {
 
     // Listens to queryParams changes (pageIndex and pageSize in particular)
     // and dispatches those values to the store and may trigger loading of bookmarks for that page
-    this.route.queryParams.subscribe((params) => {
+    this.route.queryParams.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((params) => {
       const pageIndex = params['pageIndex'] ? parseInt(params['pageIndex'], 10) : 0;
       const pageSize = params['pageSize'] ? parseInt(params['pageSize'], 10) : DEFAULT_PAGE_SIZE;
       this.pageIndex = pageIndex;

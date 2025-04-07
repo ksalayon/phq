@@ -52,6 +52,8 @@ export class BookmarksTableComponent implements AfterViewInit, OnInit, OnChanges
   @Input({ required: true }) bookmarks$!: Observable<Bookmark[]>;
   @Input({ required: true }) totalCount!: number;
   @Input({ required: true }) currentPageState$!: Observable<CurrentPageState>;
+  @Input({ required: true }) loading$!: Observable<boolean>;
+
   // Emit an "Edit" event
   @Output() editBookmark = new EventEmitter<VMBookmark>();
   // Emit a delete event
