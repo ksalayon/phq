@@ -2,12 +2,24 @@
   <mat-table [dataSource]="dataSource" matSort class="mat-elevation-z8">
     <ng-container matColumnDef="name">
       <mat-header-cell *matHeaderCellDef> Name</mat-header-cell>
-      <mat-cell *matCellDef="let element"> {{ element.name }}</mat-cell>
+      <mat-cell *matCellDef="let element">
+        <span
+          matTooltip
+          [appOverflowTooltip]="element.name"
+        >{{ element.name }}</span>
+      </mat-cell>
     </ng-container>
 
     <ng-container matColumnDef="url">
       <mat-header-cell *matHeaderCellDef> URL</mat-header-cell>
-      <mat-cell *matCellDef="let element"> {{ element.url }}</mat-cell>
+      <mat-cell *matCellDef="let element">
+        <span
+          matTooltip
+          [appOverflowTooltip]="element.url"
+        >
+          {{ element.url }}
+        </span>
+      </mat-cell>
     </ng-container>
 
     <ng-container matColumnDef="bookmarkGroupId">

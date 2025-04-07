@@ -28,6 +28,8 @@ import { MatIconButton } from '@angular/material/button';
 import { SnackbarService } from '../../../../shared/services/snackbar.service';
 import { TimeAgoDetailedPipe } from '../../../../shared/pipes/time-ago-detailed.pipe';
 import { Store } from '@ngrx/store';
+import { OverflowTooltipDirective } from '../../../../shared/directives/overflow-tooltip.directive';
+import { MatTooltip } from '@angular/material/tooltip';
 
 @Component({
   standalone: true,
@@ -44,6 +46,8 @@ import { Store } from '@ngrx/store';
     MatMenuTrigger,
     MatIconButton,
     TimeAgoDetailedPipe,
+    OverflowTooltipDirective,
+    MatTooltip,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
