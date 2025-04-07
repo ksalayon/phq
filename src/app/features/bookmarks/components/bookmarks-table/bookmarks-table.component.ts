@@ -82,10 +82,13 @@ export class BookmarksTableComponent implements AfterViewInit, OnInit, OnChanges
       )
       .subscribe();
 
-    this.store.select(selectBookmarksTotalCount).subscribe((count) => {
-      this.totalCount = count; // Update totalCount if not set explicitly
-      this.updatePaginator(); // Sync paginator when totalCount changes
-    });
+    this.store
+      .select(selectBookmarksTotalCount)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((count) => {
+        this.totalCount = count; // Update totalCount if not set explicitly
+        this.updatePaginator(); // Sync paginator when totalCount changes
+      });
 
     // Dispatch initial load
     this.store.dispatch(BookmarksActions.loadBookmarks({ startIndex: 0, limit: 20 }));

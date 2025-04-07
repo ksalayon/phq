@@ -23,7 +23,6 @@ export const initialState: BookmarksState = bookmarksAdapter.getInitialState({
   loading: false,
   isSubmitting: false,
   totalCount: 0,
-  currentPage: [],
 });
 
 export const bookmarksReducer = createReducer(
@@ -32,14 +31,12 @@ export const bookmarksReducer = createReducer(
   // Load Bookmarks (All)
   on(BookmarksActions.loadBookmarks, (state) => ({ ...state, loading: true })),
   on(BookmarksActions.loadBookmarksSuccess, (state, { bookmarks, totalCount }) => {
-    console.log('Reducer: Updating totalCount to:', totalCount);
-    return {
+    return bookmarksAdapter.setAll(bookmarks, {
       ...state,
-      currentPage: bookmarks,
-      totalCount, // Ensure totalCount doesn't reset or change to unexpected values
+      totalCount, // Ensure this updates correctly
       loading: false,
       error: null,
-    };
+    });
   }),
   on(BookmarksActions.loadBookmarksFailure, (state, { error }) => ({
     ...state,
@@ -72,6 +69,7 @@ export const bookmarksReducer = createReducer(
       ...bookmarksAdapter.addOne(bookmark, state),
       loading: false, // Ensure loading and isSubmitting flags are reset to false after success
       isSubmitting: false,
+      totalCount: state.totalCount + 1,
       error: null,
     };
   }),
@@ -120,6 +118,7 @@ export const bookmarksReducer = createReducer(
       ...bookmarksAdapter.removeOne(id, state),
       loading: false, // Ensure loading and isSubmitting flags are reset to false after success
       isSubmitting: false,
+      totalCount: state.totalCount - 1,
       error: null,
     };
   }),

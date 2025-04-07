@@ -1,9 +1,12 @@
-import { createFeatureSelector, createSelector } from '@ngrx/store';
-import { BookmarksState } from './bookmarks.reducer';
+import { createSelector } from '@ngrx/store';
+import { bookmarksAdapter, BookmarksState } from './bookmarks.reducer';
+
 import { Bookmark } from '../models/bookmark';
 import { BookmarksUtils } from '../utils/bookmark.util';
 
-export const selectBookmarksState = createFeatureSelector<BookmarksState>('bookmarks');
+// export const selectBookmarksState = createFeatureSelector<BookmarksState>('bookmarks');
+export const selectBookmarksState = (state: any) => state.bookmarks;
+const { selectAll } = bookmarksAdapter.getSelectors(selectBookmarksState);
 
 export const selectAllBookmarks = createSelector(
   selectBookmarksState,
@@ -33,13 +36,26 @@ export const selectIsSubmitting = createSelector(
 );
 
 // Select current bookmarks page from state
-export const selectCurrentPageBookmarks = createSelector(
-  selectBookmarksState,
-  (state) => state.currentPage || []
+export const selectCurrentPageBookmarks = (pageIndex: number, pageSize: number) => {
+  return createSelector(selectAll, (bookmarks) => {
+    const start = pageIndex * pageSize;
+    const end = start + pageSize;
+    return bookmarks.slice(start, end);
+  });
+};
+
+export const selectCurrentPage = createSelector(
+  selectAll, // Get all entities as an array
+  (state: BookmarksState, props: { page: number; pageSize: number }) => props, // Pass the current page and size as props
+  (bookmarks, { page, pageSize }) => {
+    const start = (page - 1) * pageSize;
+    const end = start + pageSize;
+    return bookmarks.slice(start, end); // Compute the range dynamically
+  }
 );
 
 // Select total count of bookmarks
 export const selectBookmarksTotalCount = createSelector(
   selectBookmarksState,
-  (state) => state.totalCount
+  (state: BookmarksState) => state.totalCount
 );

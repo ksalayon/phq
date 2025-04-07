@@ -74,7 +74,8 @@ export class BookmarksPageComponent implements OnInit {
    * @return {Observable<Array>} An observable emitting an array of all bookmarks.
    */
   get bookmarks$(): Observable<Bookmark[]> {
-    return this.store.select(selectCurrentPageBookmarks);
+    const currentPageSelector = selectCurrentPageBookmarks(this.pageIndex, this.pageSize); // Build the selector
+    return this.store.select(currentPageSelector); // Use the built selector
   }
 
   get bookmarksTotalCount$() {
