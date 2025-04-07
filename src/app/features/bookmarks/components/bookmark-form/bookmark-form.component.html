@@ -8,6 +8,7 @@
       formControlName="url"
       required
     />
+    <mat-icon matSuffix>link</mat-icon>
     <mat-error *ngIf="error$ | async as error">{{ error }}</mat-error>
     <mat-error *ngIf="form.get('url')?.hasError('required') && !form.get('url')?.pristine">Url is required</mat-error>
     <mat-error *ngIf="form.get('url')?.hasError('invalidUrl')">URL is not valid
