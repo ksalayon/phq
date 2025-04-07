@@ -85,17 +85,26 @@ export class BookmarksPageComponent implements OnInit {
   }
 
   ngOnInit() {
+    // Listens to pagination changes and loads bookmarks with those changes
     this.currentPageState$.subscribe((pageState) => {
       this.pageIndex = pageState?.pageIndex || 0;
       this.pageSize = pageState?.pageSize || DEFAULT_PAGE_SIZE;
       this.loadBookmarks(); // Load the page based on saved state
     });
+
+    // Listens to queryParams changes (pageIndex and pageSize in particular)
+    // and dispatches those values to the store and may trigger loading of bookmarks for that page
     this.route.queryParams.subscribe((params) => {
       const pageIndex = params['pageIndex'] ? parseInt(params['pageIndex'], 10) : 0;
       const pageSize = params['pageSize'] ? parseInt(params['pageSize'], 10) : DEFAULT_PAGE_SIZE;
       this.pageIndex = pageIndex;
       this.pageSize = pageSize;
-      this.loadBookmarks();
+      this.store.dispatch(
+        BookmarksActions.saveCurrentPageState({
+          pageIndex: this.pageIndex,
+          pageSize: this.pageSize,
+        })
+      );
     });
   }
 
@@ -109,8 +118,24 @@ export class BookmarksPageComponent implements OnInit {
     );
   }
 
-  // Handle paginator events
-  onPaginatorChange(event: { pageIndex: number; pageSize: number }) {
+  /**
+   * Handles the paginator change event to update the query parameters in the
+   * browser and dispatch the current page state to the store.
+   *
+   * @param {Object} event - The event object containing pagination details.
+   * @param {number} event.pageIndex - The current page index after the paginator change.
+   * @param {number} event.pageSize - The number of items per page after the paginator change.
+   * @return {void} This method does not return any value.
+   */
+  onPaginatorChange(event: { pageIndex: number; pageSize: number }): void {
+    // Reflect query params on browser once the user starts paginating through the table
+    this.router
+      .navigate([], {
+        queryParams: { pageIndex: event.pageIndex, pageSize: event.pageSize },
+        queryParamsHandling: 'merge',
+      })
+      .then();
+
     this.store.dispatch(
       BookmarksActions.saveCurrentPageState({
         pageIndex: event.pageIndex,
@@ -149,8 +174,15 @@ export class BookmarksPageComponent implements OnInit {
     this.pageIndex = 0; // Reset to the first page to ensure new data is shown
   }
 
-  // Handle bookmark deletion
-  onDeleteBookmark(bookmark: VMBookmark) {
+  /**
+   * Handles the deletion of a bookmark by opening a confirmation dialog,
+   * monitoring the submission process, and dispatching the delete action
+   * to update the application state.
+   *
+   * @param {VMBookmark} bookmark - The bookmark object to be deleted. It represents the virtual model of a bookmark entity.
+   * @return {void} This method does not return any value.
+   */
+  onDeleteBookmark(bookmark: VMBookmark): void {
     this.modalService.open(ConfirmDeleteDialogComponent, {
       inputs: {
         bookmark: BookmarksUtils.transformSingleVMToBookmark(bookmark),

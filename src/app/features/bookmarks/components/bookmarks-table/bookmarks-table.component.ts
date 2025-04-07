@@ -23,8 +23,7 @@ import { MatIcon } from '@angular/material/icon';
 import { MatIconButton } from '@angular/material/button';
 import { SnackbarService } from '../../../../shared/services/snackbar.service';
 import { TimeAgoDetailedPipe } from '../../../../shared/pipes/time-ago-detailed.pipe';
-import { BookmarksActions } from '../../state/bookmarks.actions';
-import { selectBookmarksTotalCount } from '../../state/bookmarks.selectors';
+import { selectBookmarksTotalCount, selectCurrentPageState } from '../../state/bookmarks.selectors';
 import { Store } from '@ngrx/store';
 
 @Component({
@@ -69,6 +68,8 @@ export class BookmarksTableComponent implements AfterViewInit, OnInit, OnChanges
   private destroyRef = inject(DestroyRef);
   private snackbarService = inject(SnackbarService);
   private store = inject(Store);
+  private currentPageIndex = 0;
+  private currentPageSize = 20;
 
   ngOnInit(): void {
     // Initialize dataSource with available bookmarks data
@@ -90,8 +91,17 @@ export class BookmarksTableComponent implements AfterViewInit, OnInit, OnChanges
         this.updatePaginator(); // Sync paginator when totalCount changes
       });
 
-    // Dispatch initial load
-    this.store.dispatch(BookmarksActions.loadBookmarks({ startIndex: 0, limit: 20 }));
+    // Set initial paginator state from route or store
+    this.store
+      .select(selectCurrentPageState)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(({ pageIndex, pageSize }) => {
+        this.currentPageIndex = pageIndex;
+        this.currentPageSize = pageSize;
+        if (this.paginator) {
+          this.updatePaginator();
+        }
+      });
   }
 
   ngAfterViewInit(): void {
@@ -134,6 +144,8 @@ export class BookmarksTableComponent implements AfterViewInit, OnInit, OnChanges
   private updatePaginator(): void {
     if (this.paginator) {
       this.paginator.length = this.totalCount; // Total number of records
+      this.paginator.pageIndex = this.currentPageIndex || this.paginator.pageIndex;
+      this.paginator.pageSize = this.currentPageSize || this.paginator.pageSize;
     }
   }
 }
