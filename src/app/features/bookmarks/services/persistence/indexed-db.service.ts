@@ -95,7 +95,6 @@ export class IndexedDbService {
       cursor = await cursor.continue();
       currentIndex++;
     }
-
     return bookmarks;
   }
 

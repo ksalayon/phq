@@ -1,7 +1,7 @@
 <div class="top-bar">
   <button
     *ngIf="bookmark$ | async as bookmark"
-    mat-raised-button color="primary" [routerLink]="'/bookmarks'" class="back-button">
+    mat-raised-button color="primary" (click)="backButtonHandler()" class="back-button">
     Back to Bookmarks
   </button>
 </div>

@@ -39,12 +39,12 @@ export const selectIsSubmitting = createSelector(
 export const selectCurrentPageBookmarks = (pageIndex: number, pageSize: number) =>
   createSelector(selectAll, (bookmarks) => {
     // Ensure bookmarks are always sorted before slicing
-    const sortedBookmarks = [...bookmarks].sort(BookmarksUtils.compareByDates);
-
-    const start = pageIndex * pageSize;
-    const end = start + pageSize;
+    return [...bookmarks].sort(BookmarksUtils.compareByDates);
+    //
+    // const start = pageIndex * pageSize;
+    // const end = start + pageSize;
     // Return the correct slice of data
-    return sortedBookmarks.slice(start, end);
+    // return sortedBookmarks.slice(start, end);
   });
 
 export const selectCurrentPage = createSelector(
@@ -61,4 +61,9 @@ export const selectCurrentPage = createSelector(
 export const selectBookmarksTotalCount = createSelector(
   selectBookmarksState,
   (state: BookmarksState) => state.totalCount
+);
+
+export const selectCurrentPageState = createSelector(
+  selectBookmarksState,
+  (state) => state.currentPage
 );

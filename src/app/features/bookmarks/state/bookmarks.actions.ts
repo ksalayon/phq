@@ -25,5 +25,6 @@ export const BookmarksActions = createActionGroup({
     'Delete Bookmark': props<{ id: Bookmark['id'] }>(),
     'Delete Bookmark Success': props<{ id: Bookmark['id'] }>(),
     'Delete Bookmark Failure': props<{ error: string }>(),
+    'Save Current Page State': props<{ pageIndex: number; pageSize: number }>(),
   },
 });

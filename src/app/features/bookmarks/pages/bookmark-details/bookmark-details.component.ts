@@ -1,8 +1,8 @@
 import { ChangeDetectionStrategy, Component, DestroyRef, inject, OnInit } from '@angular/core';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { Store } from '@ngrx/store';
 import { BehaviorSubject, Observable } from 'rxjs';
-import { map, switchMap } from 'rxjs/operators';
+import { map, switchMap, take } from 'rxjs/operators';
 import { selectBookmarkById } from '../../state/bookmarks.selectors'; // Selector to fetch bookmarks
 import { Bookmark } from '../../models/bookmark';
 import { AsyncPipe, CommonModule } from '@angular/common';
@@ -21,7 +21,7 @@ import { MatButton } from '@angular/material/button';
   templateUrl: './bookmark-details.component.html',
   styleUrls: ['./bookmark-details.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [AsyncPipe, CommonModule, MatCardModule, MatButton, RouterLink],
+  imports: [AsyncPipe, CommonModule, MatCardModule, MatButton],
 })
 export class BookmarkDetailsComponent implements OnInit {
   destroyRef = inject(DestroyRef);
@@ -34,6 +34,7 @@ export class BookmarkDetailsComponent implements OnInit {
   isForNewBookmark$: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(false);
 
   private route = inject(ActivatedRoute); // Access the current route
+  private router = inject(Router);
 
   private queryParams$: Observable<any> = this.route.queryParamMap.pipe(
     map((queryParamMap) => ({
@@ -60,5 +61,22 @@ export class BookmarkDetailsComponent implements OnInit {
         return this.store.select(selectBookmarkById(id)); // Use selector to fetch the bookmark
       })
     );
+  }
+
+  backButtonHandler() {
+    // Retrieve the current page state from the store
+    this.store
+      .select('bookmarks')
+      .pipe(
+        map((state) => state.currentPage), // Assuming currentPage contains pageIndex and pageSize
+        take(1)
+      )
+      .subscribe((currentPage) => {
+        const { pageIndex = 0, pageSize = 20 } = currentPage || {}; // Default values if undefined
+        // Navigate back to the bookmarks page with queryParams
+        this.router.navigate(['/bookmarks'], {
+          queryParams: { pageIndex, pageSize },
+        });
+      });
   }
 }

@@ -7,6 +7,7 @@ import { BookmarksTableComponent } from '../../components/bookmarks-table/bookma
 import {
   selectBookmarksTotalCount,
   selectCurrentPageBookmarks,
+  selectCurrentPageState,
 } from '../../state/bookmarks.selectors';
 import { BehaviorSubject, Observable, Subject } from 'rxjs';
 import { VMBookmark } from '../../components/bookmarks-table/bookmarks-table.models';
@@ -14,7 +15,7 @@ import { ModalService } from '../../../../shared/services/modal-dialog.service';
 import { BookmarksUtils } from '../../utils/bookmark.util';
 import { ConfirmDeleteDialogComponent } from '../../components/confirm-delete-dialog/confirm-delete-dialog.component';
 import { BookmarkStateService } from '../../services/bookmark-state.service';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { SnackbarService } from '../../../../shared/services/snackbar.service';
 import { AsyncPipe } from '@angular/common';
@@ -67,6 +68,8 @@ export class BookmarksPageComponent implements OnInit {
 
   private router = inject(Router);
   private snackbarService = inject(SnackbarService);
+  private currentPageState$ = this.store.select(selectCurrentPageState);
+  private route = inject(ActivatedRoute);
 
   /**
    * Retrieves an observable stream of all bookmarks from the store.
@@ -74,8 +77,7 @@ export class BookmarksPageComponent implements OnInit {
    * @return {Observable<Array>} An observable emitting an array of all bookmarks.
    */
   get bookmarks$(): Observable<Bookmark[]> {
-    const currentPageSelector = selectCurrentPageBookmarks(this.pageIndex, this.pageSize); // Build the selector
-    return this.store.select(currentPageSelector); // Use the built selector
+    return this.store.select(selectCurrentPageBookmarks(this.pageIndex, this.pageSize));
   }
 
   get bookmarksTotalCount$() {
@@ -83,20 +85,38 @@ export class BookmarksPageComponent implements OnInit {
   }
 
   ngOnInit() {
-    this.loadBookmarks();
+    this.currentPageState$.subscribe((pageState) => {
+      this.pageIndex = pageState?.pageIndex || 0;
+      this.pageSize = pageState?.pageSize || DEFAULT_PAGE_SIZE;
+      this.loadBookmarks(); // Load the page based on saved state
+    });
+    this.route.queryParams.subscribe((params) => {
+      const pageIndex = params['pageIndex'] ? parseInt(params['pageIndex'], 10) : 0;
+      const pageSize = params['pageSize'] ? parseInt(params['pageSize'], 10) : DEFAULT_PAGE_SIZE;
+      this.pageIndex = pageIndex;
+      this.pageSize = pageSize;
+      this.loadBookmarks();
+    });
   }
 
   // Method to load bookmarks for the current page
   loadBookmarks() {
-    const startIndex = this.pageIndex * this.pageSize;
-    this.store.dispatch(BookmarksActions.loadBookmarks({ startIndex, limit: this.pageSize }));
+    this.store.dispatch(
+      BookmarksActions.loadBookmarks({
+        startIndex: this.pageIndex * this.pageSize,
+        limit: this.pageSize,
+      })
+    );
   }
 
   // Handle paginator events
   onPaginatorChange(event: { pageIndex: number; pageSize: number }) {
-    this.pageIndex = event.pageIndex;
-    this.pageSize = event.pageSize;
-    this.loadBookmarks(); // Reload data with new pagination settings
+    this.store.dispatch(
+      BookmarksActions.saveCurrentPageState({
+        pageIndex: event.pageIndex,
+        pageSize: event.pageSize,
+      })
+    );
   }
 
   /**
@@ -203,6 +223,8 @@ export class BookmarksPageComponent implements OnInit {
    * Redirects the user to the detailed view of a bookmark at /bookmarks/details/:id
    */
   onViewBookmark(bookmark: VMBookmark): void {
-    this.router.navigate([`/bookmarks/details/${bookmark.id}`]).then();
+    this.router.navigate(['/bookmarks/details', bookmark.id], {
+      queryParams: { pageIndex: this.pageIndex, pageSize: this.pageSize },
+    });
   }
 }

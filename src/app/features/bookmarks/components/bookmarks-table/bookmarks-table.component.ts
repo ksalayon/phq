@@ -74,11 +74,11 @@ export class BookmarksTableComponent implements AfterViewInit, OnInit, OnChanges
     // Initialize dataSource with available bookmarks data
     this.bookmarks$
       .pipe(
-        takeUntilDestroyed(this.destroyRef),
         tap((bookmarks) => {
           this.dataSource = new MatTableDataSource<Bookmark>(bookmarks);
           this.updatePaginator(); // Ensure paginator syncs with bookmarks
-        })
+        }),
+        takeUntilDestroyed(this.destroyRef)
       )
       .subscribe();
 
