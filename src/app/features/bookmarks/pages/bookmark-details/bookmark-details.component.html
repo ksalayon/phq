@@ -9,7 +9,7 @@
 <div class="main-content">
   <ng-container *ngIf="bookmark$ | async as bookmark; else loading">
     <ng-container *ngIf="bookmark; else notFound">
-      <ng-container *ngIf="isForNewBookmark$ | async as isForNewBookmark">
+      <ng-container *ngIf="isForNewBookmark$ | async">
         <h1 class="mat-display-2">Bookmark added!</h1>
         <h2 class="mat-h4">Thanks for your submission — your bookmark has been saved successfully.</h2>
       </ng-container>

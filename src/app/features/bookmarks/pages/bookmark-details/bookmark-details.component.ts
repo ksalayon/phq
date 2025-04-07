@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, DestroyRef, inject, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Store } from '@ngrx/store';
-import { BehaviorSubject, Observable } from 'rxjs';
+import { BehaviorSubject, Observable, withLatestFrom } from 'rxjs';
 import { map, switchMap, take } from 'rxjs/operators';
 import { selectBookmarkById } from '../../state/bookmarks.selectors'; // Selector to fetch bookmarks
 import { Bookmark } from '../../models/bookmark';
@@ -10,6 +10,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MatCardModule } from '@angular/material/card';
 import { MatButton } from '@angular/material/button';
 import { BookmarksActions } from '../../state/bookmarks.actions';
+import { DEFAULT_PAGE_SIZE, FIRST_PAGE_INDEX } from '../../models/bookmarks-table.models';
 
 /**
  * BookmarkDetailsComponent is a standalone Angular component used to display the details of a specific bookmark.
@@ -55,31 +56,52 @@ export class BookmarkDetailsComponent implements OnInit {
     });
     // Extract the "id" from the route and fetch the bookmark from the store
     this.bookmark$ = this.route.paramMap.pipe(
-      takeUntilDestroyed(this.destroyRef),
       map((paramMap) => paramMap.get('id')), // Extract the "id" parameter
       switchMap((id) => {
         if (!id) return [undefined]; // Handle invalid "id" gracefully
         // trigger fetch on specific bookmark. This is necessary for deep-linking to a specific bookmark too
         this.store.dispatch(BookmarksActions.loadBookmark({ id }));
         return this.store.select(selectBookmarkById(id)); // Use selector to fetch the bookmark
-      })
+      }),
+      takeUntilDestroyed(this.destroyRef)
     );
   }
 
-  backButtonHandler() {
+  /**
+   * Handles the action performed when the back button is pressed.
+   * Depending on the current state and flags, navigates back to the bookmarks page,
+   * either resetting to the first page or preserving the current pagination parameters.
+   *
+   * @return {void} Does not return a value.
+   */
+  backButtonHandler(): void {
     // Retrieve the current page state from the store
     this.store
       .select('bookmarks')
       .pipe(
         map((state) => state.currentPage), // Assuming currentPage contains pageIndex and pageSize
-        take(1)
+        take(1),
+        withLatestFrom(this.isForNewBookmark$)
       )
-      .subscribe((currentPage) => {
-        const { pageIndex = 0, pageSize = 20 } = currentPage || {}; // Default values if undefined
-        // Navigate back to the bookmarks page with queryParams
-        this.router.navigate(['/bookmarks'], {
-          queryParams: { pageIndex, pageSize },
-        });
+      .subscribe(([currentPage, isForNewBookmark]) => {
+        const { pageIndex = FIRST_PAGE_INDEX, pageSize = DEFAULT_PAGE_SIZE } = currentPage || {}; // Default values if undefined
+        // When this view is loaded on account of creating a new bookmark,
+        // then always redirect user to the first page
+        if (isForNewBookmark) {
+          this.router
+            .navigate(['/bookmarks'], {
+              queryParams: { pageIndex: 0, pageSize },
+            })
+            .then();
+          return;
+        }
+        // Navigate back to the bookmarks page with queryParams - goes back to the
+        // same page where the user initially came from to view this bookmark
+        this.router
+          .navigate(['/bookmarks'], {
+            queryParams: { pageIndex, pageSize },
+          })
+          .then();
       });
   }
 }
