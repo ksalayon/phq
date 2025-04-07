@@ -1,7 +1,7 @@
 import { createSelector } from '@ngrx/store';
 import { bookmarksAdapter, BookmarksState } from './bookmarks.reducer';
 
-import { Bookmark } from '../models/bookmark';
+import { Bookmark, CurrentPageState } from '../models/bookmark';
 import { BookmarksUtils } from '../utils/bookmark.util';
 
 // export const selectBookmarksState = createFeatureSelector<BookmarksState>('bookmarks');
@@ -40,11 +40,6 @@ export const selectCurrentPageBookmarks = (pageIndex: number, pageSize: number) 
   createSelector(selectAll, (bookmarks) => {
     // Ensure bookmarks are always sorted before slicing
     return [...bookmarks].sort(BookmarksUtils.compareByDates);
-    //
-    // const start = pageIndex * pageSize;
-    // const end = start + pageSize;
-    // Return the correct slice of data
-    // return sortedBookmarks.slice(start, end);
   });
 
 export const selectCurrentPage = createSelector(
@@ -63,7 +58,12 @@ export const selectBookmarksTotalCount = createSelector(
   (state: BookmarksState) => state.totalCount
 );
 
+/**
+ * Selector function to retrieve the current page state from the bookmarks state.
+ * useful for
+ * accessing the state associated with the current page i.e. current pageSize and pageIndex
+ */
 export const selectCurrentPageState = createSelector(
   selectBookmarksState,
-  (state) => state.currentPage
+  (state) => state.currentPage as CurrentPageState
 );

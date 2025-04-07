@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, DestroyRef, inject, OnInit } from '@angular/core';
 import { BookmarkFormComponent } from '../../components/bookmark-form/bookmark-form.component';
-import { Bookmark, CreateBookmarkPayload } from '../../models/bookmark';
+import { Bookmark, CreateBookmarkPayload, CurrentPageState } from '../../models/bookmark';
 import { Store } from '@ngrx/store';
 import { BookmarksActions } from '../../state/bookmarks.actions';
 import { BookmarksTableComponent } from '../../components/bookmarks-table/bookmarks-table.component';
@@ -80,11 +80,23 @@ export class BookmarksPageComponent implements OnInit {
     return this.store.select(selectCurrentPageBookmarks(this.pageIndex, this.pageSize));
   }
 
+  /**
+   * Getter method that retrieves an Observable representing the total count of bookmarks.
+   *
+   * @return {Observable<number>} An Observable emitting the current total count of bookmarks from the store.
+   */
   get bookmarksTotalCount$() {
     return this.store.select(selectBookmarksTotalCount);
   }
 
-  get currentPageState$() {
+  /**
+   * A getter method that provides an observable which emits the current page state
+   * from the application's data store. This allows reactive subscription to
+   * state changes related to the current page - i.e. current pageSize and pageIndex
+   *
+   * @return {Observable<CurrentPageState>} An observable of the current page state.
+   */
+  get currentPageState$(): Observable<CurrentPageState> {
     return this.store.select(selectCurrentPageState);
   }
 
