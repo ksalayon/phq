@@ -10,7 +10,11 @@ import {
   selectCurrentPageState,
 } from '../../state/bookmarks.selectors';
 import { BehaviorSubject, Observable, Subject } from 'rxjs';
-import { VMBookmark } from '../../components/bookmarks-table/bookmarks-table.models';
+import {
+  DEFAULT_PAGE_SIZE,
+  FIRST_PAGE_INDEX,
+  VMBookmark,
+} from '../../models/bookmarks-table.models';
 import { ModalService } from '../../../../shared/services/modal-dialog.service';
 import { BookmarksUtils } from '../../utils/bookmark.util';
 import { ConfirmDeleteDialogComponent } from '../../components/confirm-delete-dialog/confirm-delete-dialog.component';
@@ -19,9 +23,6 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { SnackbarService } from '../../../../shared/services/snackbar.service';
 import { AsyncPipe } from '@angular/common';
-
-const FIRST_PAGE_INDEX = 0;
-const DEFAULT_PAGE_SIZE = 20;
 
 /**
  * BookmarksPageComponent is a container component that provides functionality for managing bookmarks.
@@ -68,7 +69,6 @@ export class BookmarksPageComponent implements OnInit {
 
   private router = inject(Router);
   private snackbarService = inject(SnackbarService);
-  private currentPageState$ = this.store.select(selectCurrentPageState);
   private route = inject(ActivatedRoute);
 
   /**
@@ -82,6 +82,10 @@ export class BookmarksPageComponent implements OnInit {
 
   get bookmarksTotalCount$() {
     return this.store.select(selectBookmarksTotalCount);
+  }
+
+  get currentPageState$() {
+    return this.store.select(selectCurrentPageState);
   }
 
   ngOnInit() {

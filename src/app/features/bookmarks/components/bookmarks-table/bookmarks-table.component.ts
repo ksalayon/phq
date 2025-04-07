@@ -14,8 +14,12 @@ import {
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
 import { CommonModule } from '@angular/common';
-import { VMBookmark } from './bookmarks-table.models';
-import { Bookmark } from '../../models/bookmark';
+import {
+  DEFAULT_PAGE_SIZE,
+  FIRST_PAGE_INDEX,
+  VMBookmark,
+} from '../../models/bookmarks-table.models';
+import { Bookmark, CurrentPageState } from '../../models/bookmark';
 import { Observable, tap } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MatMenu, MatMenuItem, MatMenuTrigger } from '@angular/material/menu';
@@ -23,7 +27,6 @@ import { MatIcon } from '@angular/material/icon';
 import { MatIconButton } from '@angular/material/button';
 import { SnackbarService } from '../../../../shared/services/snackbar.service';
 import { TimeAgoDetailedPipe } from '../../../../shared/pipes/time-ago-detailed.pipe';
-import { selectBookmarksTotalCount, selectCurrentPageState } from '../../state/bookmarks.selectors';
 import { Store } from '@ngrx/store';
 
 @Component({
@@ -48,6 +51,7 @@ export class BookmarksTableComponent implements AfterViewInit, OnInit, OnChanges
   @ViewChild(MatPaginator) paginator!: MatPaginator;
   @Input({ required: true }) bookmarks$!: Observable<Bookmark[]>;
   @Input({ required: true }) totalCount!: number;
+  @Input({ required: true }) currentPageState!: CurrentPageState;
   // Emit an "Edit" event
   @Output() editBookmark = new EventEmitter<VMBookmark>();
   // Emit a delete event
@@ -68,8 +72,8 @@ export class BookmarksTableComponent implements AfterViewInit, OnInit, OnChanges
   private destroyRef = inject(DestroyRef);
   private snackbarService = inject(SnackbarService);
   private store = inject(Store);
-  private currentPageIndex = 0;
-  private currentPageSize = 20;
+  private currentPageIndex = FIRST_PAGE_INDEX;
+  private currentPageSize = DEFAULT_PAGE_SIZE;
 
   ngOnInit(): void {
     // Initialize dataSource with available bookmarks data
@@ -82,26 +86,6 @@ export class BookmarksTableComponent implements AfterViewInit, OnInit, OnChanges
         takeUntilDestroyed(this.destroyRef)
       )
       .subscribe();
-
-    this.store
-      .select(selectBookmarksTotalCount)
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe((count) => {
-        this.totalCount = count; // Update totalCount if not set explicitly
-        this.updatePaginator(); // Sync paginator when totalCount changes
-      });
-
-    // Set initial paginator state from route or store
-    this.store
-      .select(selectCurrentPageState)
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe(({ pageIndex, pageSize }) => {
-        this.currentPageIndex = pageIndex;
-        this.currentPageSize = pageSize;
-        if (this.paginator) {
-          this.updatePaginator();
-        }
-      });
   }
 
   ngAfterViewInit(): void {
@@ -111,6 +95,12 @@ export class BookmarksTableComponent implements AfterViewInit, OnInit, OnChanges
 
   ngOnChanges() {
     if (this.totalCount !== undefined && this.paginator) {
+      this.updatePaginator();
+    }
+
+    if (this.currentPageState) {
+      this.currentPageIndex = this.currentPageState.pageIndex;
+      this.currentPageSize = this.currentPageState.pageSize;
       this.updatePaginator();
     }
   }

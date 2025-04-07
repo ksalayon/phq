@@ -1,6 +1,6 @@
 import { AbstractControl, ValidationErrors, ValidatorFn } from '@angular/forms';
 import { Bookmark } from '../models/bookmark';
-import { VMBookmark } from '../components/bookmarks-table/bookmarks-table.models';
+import { VMBookmark } from '../models/bookmarks-table.models';
 
 export class BookmarksUtils {
   /**

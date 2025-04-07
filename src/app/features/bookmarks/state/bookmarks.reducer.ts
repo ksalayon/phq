@@ -1,7 +1,7 @@
 import { createEntityAdapter, EntityAdapter, EntityState } from '@ngrx/entity';
 import { createReducer, on } from '@ngrx/store';
 import { BookmarksActions } from './bookmarks.actions';
-import { Bookmark } from '../models/bookmark';
+import { Bookmark, CurrentPageState } from '../models/bookmark';
 import { BookmarksUtils } from '../utils/bookmark.util';
 
 export const bookmarksFeatureKey = 'bookmarks';
@@ -11,10 +11,7 @@ export interface BookmarksState extends EntityState<Bookmark> {
   loading: boolean;
   isSubmitting: boolean;
   totalCount: number;
-  currentPage: {
-    pageIndex: number;
-    pageSize: number;
-  };
+  currentPage: CurrentPageState;
 }
 
 export const bookmarksAdapter: EntityAdapter<Bookmark> = createEntityAdapter<Bookmark>({

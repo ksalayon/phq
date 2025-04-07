@@ -40,3 +40,8 @@ export type UpdateBookmarkPayload = Pick<Bookmark, 'url' | 'id' | 'name'>;
  * specifically the `url` and `name` fields
  */
 export type CreateBookmarkPayload = Pick<Bookmark, 'url' | 'name'>;
+
+export interface CurrentPageState {
+  pageIndex: number;
+  pageSize: number;
+}
