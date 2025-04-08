@@ -1,6 +1,6 @@
 import { Routes } from '@angular/router';
 import { MainLayoutComponent } from './layout/main/main-layout/main-layout.component';
-import { BookmarkService } from './features/bookmarks/services/bookmark.service';
+import { BookmarkDataService } from './features/bookmarks/services/bookmark-data.service';
 import { provideState } from '@ngrx/store';
 import {
   bookmarksFeatureKey,
@@ -21,7 +21,7 @@ export const routes: Routes = [
     // to avoid duplicated instances
     providers: [
       IndexedDbService,
-      BookmarkService,
+      BookmarkDataService,
       BookmarkStateService,
       provideState({ name: bookmarksFeatureKey, reducer: bookmarksReducer }),
       provideEffects([BookmarksEffects]),

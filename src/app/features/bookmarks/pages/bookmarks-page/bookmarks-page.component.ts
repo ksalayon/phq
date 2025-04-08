@@ -8,15 +8,7 @@ import {
 } from '@angular/core';
 import { BookmarkFormComponent } from '../../components/bookmark-form/bookmark-form.component';
 import { Bookmark, CreateBookmarkPayload, CurrentPageState } from '../../models/bookmark';
-import { Store } from '@ngrx/store';
-import { BookmarksActions } from '../../state/bookmarks.actions';
 import { BookmarksTableComponent } from '../../components/bookmarks-table/bookmarks-table.component';
-import {
-  selectBookmarksTotalCount,
-  selectCurrentPageBookmarks,
-  selectCurrentPageState,
-  selectLoading,
-} from '../../state/bookmarks.selectors';
 import {
   BehaviorSubject,
   combineLatest,
@@ -46,7 +38,6 @@ import { MatProgressSpinner } from '@angular/material/progress-spinner';
 import { MatTooltip } from '@angular/material/tooltip';
 import { filter, map } from 'rxjs/operators';
 import { MatButton } from '@angular/material/button';
-import { BookmarkService } from '../../services/bookmark.service';
 import { MatInputModule } from '@angular/material/input';
 import { MatFormFieldModule } from '@angular/material/form-field';
 
@@ -54,10 +45,6 @@ import { MatFormFieldModule } from '@angular/material/form-field';
  * BookmarksPageComponent is a container component that provides functionality for managing bookmarks.
  * It integrates features such as creating, editing, deleting, and viewing bookmarks.
  * The component employs reactive state management, modal dialogs, and routing.
- *
- * This component depends on BookmarkFormComponent and BookmarksTableComponent for
- * UI presentation and interaction with user inputs. State management and side effects
- * are handled by injected services.
  *
  * Functionalities and Features:
  * - Fetches and displays a list of bookmarks via reactive state management.
@@ -113,12 +100,9 @@ export class BookmarksPageComponent implements OnInit {
   bookmarksTotalCountSUbject$ = new BehaviorSubject<number>(0);
   bookmarksTotalCount$ = this.bookmarksTotalCountSUbject$.asObservable();
 
-  private store = inject(Store);
-
   private router = inject(Router);
   private snackbarService = inject(SnackbarService);
   private route = inject(ActivatedRoute);
-  private bookmarkService = inject(BookmarkService);
 
   private searchPageState$ = new BehaviorSubject<CurrentPageState & { totalCount: number }>({
     pageIndex: 0,
@@ -129,7 +113,7 @@ export class BookmarksPageComponent implements OnInit {
   private isSearchLoading$ = new BehaviorSubject<boolean>(false);
 
   get loading$(): Observable<boolean> {
-    return combineLatest([this.isSearchLoading$, this.store.select(selectLoading)]).pipe(
+    return combineLatest([this.isSearchLoading$, this.bookmarkStateService.selectLoading$()]).pipe(
       map(([isSearchLoading, isStoreLoading]) => isSearchLoading || isStoreLoading)
     );
   }
@@ -142,7 +126,7 @@ export class BookmarksPageComponent implements OnInit {
    * @return {Observable<CurrentPageState>} An observable of the current page state.
    */
   get currentPageState$(): Observable<CurrentPageState> {
-    return this.store.select(selectCurrentPageState);
+    return this.bookmarkStateService.selectCurrentPageState$();
   }
 
   ngOnInit() {
@@ -161,8 +145,8 @@ export class BookmarksPageComponent implements OnInit {
    * @return {void} No return value.
    */
   monitorPaginatedBookmarks(): void {
-    this.store
-      .select(selectCurrentPageBookmarks(this.pageIndex, this.pageSize))
+    this.bookmarkStateService
+      .selectCurrentPageBookmarks$(this.pageIndex, this.pageSize)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((bookmarks) => {
         this.isSearchLoading$.next(false);
@@ -195,7 +179,7 @@ export class BookmarksPageComponent implements OnInit {
             limit: searchPageState.pageSize,
           };
           // Dispatch the searchBookmarksByUrl action with the query and pagination state
-          this.store.dispatch(BookmarksActions.searchBookmarksByUrl(dispatchParam));
+          this.bookmarkStateService.searchBookmarksByUrl$(dispatchParam);
 
           // Set the loading state
           this.isSearchLoading$.next(true);
@@ -212,7 +196,7 @@ export class BookmarksPageComponent implements OnInit {
    *
    * @return {void} Does not return a value.
    */
-  monitorSearchResultCount() {
+  monitorSearchResultCount(): void {
     let currentSearchTerm = '';
     this.bookmarksSubject$
       .pipe(
@@ -221,9 +205,7 @@ export class BookmarksPageComponent implements OnInit {
           if (results.length && searchTerm !== currentSearchTerm) {
             currentSearchTerm = searchTerm;
             // Dispatch the action to get the search result count
-            this.store.dispatch(
-              BookmarksActions.getBookmarkSearchResultCount({ search: searchTerm })
-            );
+            this.bookmarkStateService.getBookmarkSearchResultCount(searchTerm);
           }
         }),
         takeUntilDestroyed(this.destroyRef)
@@ -236,9 +218,9 @@ export class BookmarksPageComponent implements OnInit {
    *
    * @return {void} This method does not return any value.
    */
-  monitorBookmarksTotalCount() {
-    this.store
-      .select(selectBookmarksTotalCount)
+  monitorBookmarksTotalCount(): void {
+    this.bookmarkStateService
+      .selectBookmarksTotalCount$()
       .pipe(
         map((count) => count ?? 0),
         takeUntilDestroyed(this.destroyRef)
@@ -262,12 +244,7 @@ export class BookmarksPageComponent implements OnInit {
       const pageSize = params['pageSize'] ? parseInt(params['pageSize'], 10) : DEFAULT_PAGE_SIZE;
       this.pageIndex = pageIndex;
       this.pageSize = pageSize;
-      this.store.dispatch(
-        BookmarksActions.saveCurrentPageState({
-          pageIndex: this.pageIndex,
-          pageSize: this.pageSize,
-        })
-      );
+      this.bookmarkStateService.saveCurrentPageState(this.pageIndex, this.pageSize);
     });
   }
 
@@ -291,7 +268,7 @@ export class BookmarksPageComponent implements OnInit {
               limit: pageSize,
             };
             // Dispatch the action to search bookmarks with pagination
-            this.store.dispatch(BookmarksActions.searchBookmarksByUrl(dispatchParam));
+            this.bookmarkStateService.searchBookmarksByUrl$(dispatchParam);
           }
           this.pageIndex = pageIndex;
           this.pageSize = pageSize;
@@ -325,12 +302,7 @@ export class BookmarksPageComponent implements OnInit {
    * @return {void} This method does not return a value.
    */
   loadBookmarks(): void {
-    this.store.dispatch(
-      BookmarksActions.loadBookmarks({
-        startIndex: this.pageIndex * this.pageSize,
-        limit: this.pageSize,
-      })
-    );
+    this.bookmarkStateService.loadBookmarks(this.pageIndex, this.pageSize);
   }
 
   /**
@@ -350,12 +322,7 @@ export class BookmarksPageComponent implements OnInit {
         queryParamsHandling: 'merge',
       })
       .then();
-    this.store.dispatch(
-      BookmarksActions.saveCurrentPageState({
-        pageIndex: event.pageIndex,
-        pageSize: event.pageSize,
-      })
-    );
+    this.bookmarkStateService.saveCurrentPageState(event.pageIndex, event.pageSize);
   }
 
   /**
@@ -384,7 +351,7 @@ export class BookmarksPageComponent implements OnInit {
             .then();
         }
       });
-    this.store.dispatch(BookmarksActions.createBookmark({ payload: $event }));
+    this.bookmarkStateService.createBookmark($event);
     this.pageIndex = 0; // Reset to the first page to ensure new data is shown
   }
 
@@ -416,7 +383,7 @@ export class BookmarksPageComponent implements OnInit {
               }
             });
           // dispatch event to delete bookmark
-          this.store.dispatch(BookmarksActions.deleteBookmark({ id: data.id }));
+          this.bookmarkStateService.deleteBookmark(data.id);
         },
         closed: () => {
           // Deletion cancelled
@@ -456,7 +423,7 @@ export class BookmarksPageComponent implements OnInit {
               }
             });
           // dispatch event to update bookmark
-          this.store.dispatch(BookmarksActions.updateBookmark({ payload: data }));
+          this.bookmarkStateService.updateBookmark(data);
         },
         closed: () => {
           this.modalService.close();

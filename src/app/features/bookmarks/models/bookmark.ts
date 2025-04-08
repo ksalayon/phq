@@ -45,3 +45,9 @@ export interface CurrentPageState {
   pageIndex: number;
   pageSize: number;
 }
+
+export interface BookmarksSearchParams {
+  urlQuery: string;
+  startIndex: number;
+  limit: number;
+}

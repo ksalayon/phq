@@ -2,6 +2,7 @@ import { inject, Injectable } from '@angular/core';
 import { from, Observable, throwError } from 'rxjs';
 import {
   Bookmark,
+  BookmarksSearchParams,
   CreateBookmarkPayload,
   defaultBookmarkGroup,
   UpdateBookmarkPayload,
@@ -10,7 +11,7 @@ import { IndexedDbService } from './persistence/indexed-db.service';
 import { switchMap, take } from 'rxjs/operators';
 
 @Injectable()
-export class BookmarkService {
+export class BookmarkDataService {
   private indexedDbService = inject(IndexedDbService);
 
   constructor() {}
@@ -82,11 +83,8 @@ export class BookmarkService {
     return from(this.indexedDbService.saveBookmark(newBookmark));
   }
 
-  searchBookmarksByUrl(
-    urlQuery: string,
-    startIndex: number,
-    limit: number
-  ): Observable<Bookmark[]> {
+  searchBookmarksByUrl(arg: BookmarksSearchParams): Observable<Bookmark[]> {
+    const { urlQuery, startIndex, limit } = arg;
     return from(this.indexedDbService.searchBookmarksByUrl(urlQuery, startIndex, limit));
   }
 }

@@ -7,7 +7,7 @@ import { inject, Injectable } from '@angular/core';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
 import { catchError, map, mergeMap, switchMap, take } from 'rxjs/operators';
 import { BookmarksActions } from './bookmarks.actions';
-import { BookmarkService } from '../services/bookmark.service';
+import { BookmarkDataService } from '../services/bookmark-data.service';
 import { of } from 'rxjs';
 import { Store } from '@ngrx/store';
 import { selectAllBookmarks } from './bookmarks.selectors';
@@ -16,7 +16,7 @@ import { BookmarkStateService } from '../services/bookmark-state.service';
 @Injectable()
 export class BookmarksEffects {
   private actions$ = inject(Actions);
-  private bookmarkService = inject(BookmarkService);
+  private bookmarkService = inject(BookmarkDataService);
   private store = inject(Store);
   private bookmarkStateService = inject(BookmarkStateService);
 
@@ -73,8 +73,8 @@ export class BookmarksEffects {
   searchBookmarksByUrl$ = createEffect(() =>
     this.actions$.pipe(
       ofType(BookmarksActions.searchBookmarksByUrl),
-      switchMap(({ urlQuery, startIndex, limit }) => {
-        return this.bookmarkService.searchBookmarksByUrl(urlQuery, startIndex, limit).pipe(
+      switchMap(({ payload }) => {
+        return this.bookmarkService.searchBookmarksByUrl(payload).pipe(
           map((bookmarks) => BookmarksActions.searchBookmarksByUrlSuccess({ bookmarks })),
           catchError((error) =>
             of(BookmarksActions.searchBookmarksByUrlFailure({ error: error.message }))
