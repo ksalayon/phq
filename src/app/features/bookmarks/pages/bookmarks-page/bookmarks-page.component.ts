@@ -41,6 +41,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { FormsModule } from '@angular/forms';
 import { SearchFormComponent } from '../../../../shared/components/search-form/search-form.component';
+import { BookmarkPermissions } from '../../components/bookmarks-table/models/bookmarks-table.model';
 
 /**
  * BookmarksPageComponent is a container component that provides functionality for managing bookmarks.
@@ -92,6 +93,19 @@ export class BookmarksPageComponent implements OnInit {
 
   searchTerm$ = new BehaviorSubject<string>(''); // Manages the search input
 
+  // Observable to determine if we are in search mode (searchTerm is not empty)
+  isSearchMode$ = this.searchTerm$.pipe(
+    map((term) => term.trim().length > 0) // True if search is active
+  );
+
+  // Permissions object for the table component
+  bookmarkPermissions: BookmarkPermissions = {
+    canEdit: true,
+    canDelete: true,
+    canVisit: true,
+    canView: true, // Initial state: View is allowed
+  };
+
   bookmarksSubject$ = new BehaviorSubject<Bookmark[]>([]);
   bookmarks$ = this.bookmarksSubject$.asObservable();
 
@@ -133,12 +147,30 @@ export class BookmarksPageComponent implements OnInit {
   }
 
   ngOnInit() {
+    this.monitorPermissions();
     this.monitorPaginatedBookmarks();
     this.monitorBookmarkSearch();
     this.monitorSearchResultCount();
     this.monitorBookmarksTotalCount();
     this.monitorPaginationChanges();
     this.monitorQueryParams();
+  }
+
+  /**
+   * Monitors and updates the `bookmarkPermissions` object based on the application's search mode status.
+   *
+   * Subscribes to the `isSearchMode$` observable to determine if the application is in search mode
+   * and adjusts the `canView` permission accordingly. When in search mode, `canView` is disabled.
+   *
+   * @return {void} This method does not return any value.
+   */
+  monitorPermissions(): void {
+    this.isSearchMode$.subscribe((isSearchMode) => {
+      this.bookmarkPermissions = {
+        ...this.bookmarkPermissions,
+        canView: !isSearchMode, // Disable canView if in search mode
+      };
+    });
   }
 
   /**
@@ -311,9 +343,6 @@ export class BookmarksPageComponent implements OnInit {
    * @return {void} Does not return a value.
    */
   clearSearch(): void {
-    // this.bookmarkStateService.saveCurrentPageState(0, this.pageSize);
-    // this.searchTerm$.next('');
-    // this.router.navigate([`/bookmarks`]).then();
     this.pageIndex = 0; // Reset the page index to the first page
     this.searchTerm$.next(''); // Clear the search term
     this.bookmarkStateService.loadBookmarks(this.pageIndex, this.pageSize); // Reload all bookmarks
