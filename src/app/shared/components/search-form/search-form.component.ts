@@ -6,6 +6,7 @@ import { MatIconButton } from '@angular/material/button';
 import { CommonModule } from '@angular/common';
 import { MatTooltip } from '@angular/material/tooltip';
 import { MIN_SEARCH_LENGTH } from './models/search-form.model';
+import { MatChip } from '@angular/material/chips';
 
 @Component({
   standalone: true,
@@ -20,6 +21,7 @@ import { MIN_SEARCH_LENGTH } from './models/search-form.model';
     MatSuffix,
     MatInput,
     MatTooltip,
+    MatChip,
   ],
   templateUrl: './search-form.component.html',
   styleUrl: './search-form.component.scss',
