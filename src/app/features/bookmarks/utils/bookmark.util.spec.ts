@@ -38,17 +38,42 @@ describe('BookmarksUtils', () => {
     });
 
     it('should return null for a valid URL', () => {
-      const control = { value: 'https://www.example.com' } as AbstractControl;
-      const validator = BookmarksUtils.urlValidator();
-      const result = validator(control);
-      expect(result).toBeNull();
+      const validUrls = [
+        'https://example.com/path/to/resource?query=string&another=1',
+        'http://example.com:8080/path?query=value#section',
+        'https://127.0.0.1',
+        'http://localhost:3000',
+        'https://www.example.com',
+        'http://google.com',
+        'https://foo.bar',
+        'http://localhost',
+      ];
+
+      validUrls.forEach((url) => {
+        const control = { value: url } as AbstractControl;
+        const validator = BookmarksUtils.urlValidator();
+        const result = validator(control);
+        expect(result).toBeNull();
+      });
     });
 
     it('should return an error for an invalid URL', () => {
-      const control = { value: 'invalid-url' } as AbstractControl;
-      const validator = BookmarksUtils.urlValidator();
-      const result = validator(control);
-      expect(result).toEqual({ invalidUrl: true });
+      const malformedUrls = [
+        'http://',
+        'https://example..com',
+        'https:/example.com',
+        'https://example.',
+        '://missing-protocol.com',
+        'ftp://somewhere',
+        'https://',
+        'foo.bar',
+      ];
+      malformedUrls.forEach((url) => {
+        const control = { value: url } as AbstractControl;
+        const validator = BookmarksUtils.urlValidator();
+        const result = validator(control);
+        expect(result).toEqual({ invalidUrl: true });
+      });
     });
   });
 
