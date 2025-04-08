@@ -19,6 +19,7 @@ import {
 } from '../../state/bookmarks.selectors';
 import {
   BehaviorSubject,
+  combineLatest,
   debounceTime,
   distinctUntilChanged,
   Observable,
@@ -124,8 +125,12 @@ export class BookmarksPageComponent implements OnInit {
     totalCount: 0,
   });
 
+  private isSearchLoading$ = new BehaviorSubject<boolean>(false);
+
   get loading$(): Observable<boolean> {
-    return this.store.select(selectLoading);
+    return combineLatest([this.isSearchLoading$, this.store.select(selectLoading)]).pipe(
+      map(([isSearchLoading, isStoreLoading]) => isSearchLoading || isStoreLoading)
+    );
   }
 
   /**
@@ -140,19 +145,31 @@ export class BookmarksPageComponent implements OnInit {
   }
 
   ngOnInit() {
+    this.monitorPaginatedBookmarks();
+    this.monitorBookmarkSearch();
+    this.monitorSearchResultCount();
+    this.monitorBookmarksTotalCount();
+    this.monitorPaginationChanges();
+    this.monitorQueryParams();
+  }
+
+  monitorPaginatedBookmarks() {
     this.store
       .select(selectCurrentPageBookmarks(this.pageIndex, this.pageSize))
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((bookmarks) => {
         this.bookmarksSubject$.next(bookmarks);
       });
+  }
 
+  monitorBookmarkSearch() {
     this.searchTerm$
       .pipe(
         filter((query) => !!query),
         debounceTime(700),
         distinctUntilChanged(),
         withLatestFrom(this.searchPageState$),
+        tap(() => this.isSearchLoading$.next(true)),
         switchMap(([query, searchPageState]) => {
           this.pageIndex = searchPageState.pageIndex;
           this.pageSize = searchPageState.pageSize;
@@ -163,9 +180,12 @@ export class BookmarksPageComponent implements OnInit {
         takeUntilDestroyed(this.destroyRef)
       )
       .subscribe(({ results }) => {
+        this.isSearchLoading$.next(false);
         this.bookmarksSubject$.next(results);
       });
+  }
 
+  monitorSearchResultCount() {
     let currentSearchTerm = '';
     this.bookmarksSubject$
       .pipe(
@@ -184,7 +204,9 @@ export class BookmarksPageComponent implements OnInit {
         takeUntilDestroyed(this.destroyRef)
       )
       .subscribe((bookmarks) => {});
+  }
 
+  monitorBookmarksTotalCount() {
     this.store
       .select(selectBookmarksTotalCount)
       .pipe(
@@ -194,35 +216,9 @@ export class BookmarksPageComponent implements OnInit {
       .subscribe((count) => {
         this.bookmarksTotalCountSUbject$.next(count);
       });
+  }
 
-    // Listens to pagination changes and loads bookmarks with those changes
-    this.currentPageState$
-      .pipe(
-        withLatestFrom(this.searchTerm$),
-        switchMap(([pageState, search]) => {
-          if (search) {
-            console.log('changing pagination whiel on search mode');
-            return this.bookmarkService
-              .searchBookmarksByUrl(search, this.pageIndex, this.pageSize)
-              .pipe(
-                map((searchresults) => {
-                  console.log('searchresults after pagination', searchresults);
-                  this.bookmarksSubject$.next(searchresults);
-                  return { pageState, search };
-                })
-              );
-          }
-          return of({ pageState, search });
-        }),
-        filter(({ search }) => !search),
-        takeUntilDestroyed(this.destroyRef)
-      )
-      .subscribe(({ pageState }) => {
-        this.pageIndex = pageState?.pageIndex || 0;
-        this.pageSize = pageState?.pageSize || DEFAULT_PAGE_SIZE;
-        this.loadBookmarks(); // Load the page based on saved state
-      });
-
+  monitorQueryParams() {
     // Listens to queryParams changes (pageIndex and pageSize in particular)
     // and dispatches those values to the store and may trigger loading of bookmarks for that page
     this.route.queryParams.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((params) => {
@@ -237,6 +233,38 @@ export class BookmarksPageComponent implements OnInit {
         })
       );
     });
+  }
+
+  // Listens to pagination changes and loads bookmarks with those changes
+  monitorPaginationChanges() {
+    this.currentPageState$
+      .pipe(
+        withLatestFrom(this.searchTerm$),
+        switchMap(([pageState, search]) => {
+          if (search) {
+            this.isSearchLoading$.next(true);
+            console.log('changing pagination whiel on search mode');
+            return this.bookmarkService
+              .searchBookmarksByUrl(search, this.pageIndex, this.pageSize)
+              .pipe(
+                map((searchresults) => {
+                  console.log('searchresults after pagination', searchresults);
+                  this.bookmarksSubject$.next(searchresults);
+                  this.isSearchLoading$.next(false);
+                  return { pageState, search };
+                })
+              );
+          }
+          return of({ pageState, search });
+        }),
+        filter(({ search }) => !search),
+        takeUntilDestroyed(this.destroyRef)
+      )
+      .subscribe(({ pageState }) => {
+        this.pageIndex = pageState?.pageIndex || 0;
+        this.pageSize = pageState?.pageSize || DEFAULT_PAGE_SIZE;
+        this.loadBookmarks(); // Load the page based on saved state
+      });
   }
 
   onSearchInput(event: Event) {
