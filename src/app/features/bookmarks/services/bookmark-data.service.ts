@@ -1,3 +1,4 @@
+import { v4 as uuidv4 } from 'uuid';
 import { inject, Injectable } from '@angular/core';
 import { from, Observable, throwError } from 'rxjs';
 import {
@@ -71,7 +72,7 @@ export class BookmarkDataService {
   }
 
   createBookmark(bookmark: CreateBookmarkPayload): Observable<Bookmark> {
-    const uniqueId = crypto.randomUUID(); // Generate the unique ID for the bookmark entity
+    const uniqueId: string = uuidv4(); // Generate the unique ID for the bookmark entity
     const currentDate = new Date();
     const newBookmark = {
       ...bookmark,
