@@ -16,26 +16,8 @@
 >
 </phq-bookmark-form>
 
-<mat-form-field class="search-bar" appearance="outline">
-  <mat-label>Search by URL</mat-label>
-  <input
-    matInput
-    type="text"
-    placeholder="Enter URL"
-    [value]="searchTerm$ | async"
-    (keyup)="onSearchInput($event)"
-  />
-  <button
-    mat-icon-button
-    matSuffix
-    *ngIf="(searchTerm$ | async) as term"
-    [disabled]="!term || term.length === 0"
-    (click)="clearSearch()"
-  >
-    <mat-icon>close</mat-icon>
-  </button>
-
-</mat-form-field>
+<phq-search-form class="search-form" (clearSearch)="clearSearch()" (searched)="onSearchSubmit($event)"
+                 [searchTerm]="(searchTerm$ | async) ?? ''"></phq-search-form>
 
 
 <div class="bookmarks__list">

@@ -37,10 +37,11 @@ import { AsyncPipe, CommonModule } from '@angular/common';
 import { MatProgressSpinner } from '@angular/material/progress-spinner';
 import { MatTooltip } from '@angular/material/tooltip';
 import { filter, map } from 'rxjs/operators';
-import { MatButton, MatIconButton } from '@angular/material/button';
+import { MatButton } from '@angular/material/button';
 import { MatInputModule } from '@angular/material/input';
 import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatIcon } from '@angular/material/icon';
+import { FormsModule } from '@angular/forms';
+import { SearchFormComponent } from '../../../../shared/components/search-form/search-form.component';
 
 /**
  * BookmarksPageComponent is a container component that provides functionality for managing bookmarks.
@@ -67,8 +68,8 @@ import { MatIcon } from '@angular/material/icon';
     MatButton,
     MatFormFieldModule,
     MatInputModule,
-    MatIcon,
-    MatIconButton,
+    FormsModule,
+    SearchFormComponent,
   ],
   templateUrl: './bookmarks-page.component.html',
   styleUrl: './bookmarks-page.component.scss',
@@ -288,14 +289,17 @@ export class BookmarksPageComponent implements OnInit {
    * Handles the user input from a search field. Updates the search term stream
    * if the input length is greater than 2 characters.
    *
-   * @param {Event} event - The event object triggered by the input field.
    * @return {void} This method does not return a value.
+   * @param searchTerm
    */
-  onSearchInput(event: Event): void {
-    const input = (event.target as HTMLInputElement).value;
-    if (input && input.length > SEARCH_LENGTH_THRESHOLD) {
-      this.searchTerm$.next(input); // Update the search term
+  onSearchSubmit(searchTerm: string): void {
+    if (!searchTerm || searchTerm.trim().length <= SEARCH_LENGTH_THRESHOLD) {
+      console.log('search term too short');
+      return;
     }
+
+    console.log('Search term submitted:', searchTerm);
+    this.searchTerm$.next(searchTerm);
   }
 
   /**

@@ -14,10 +14,9 @@
     height: 100%; /* Fill its row (100px) */
   }
 
-  .search-bar {
+  .search-form {
     grid-column: 2; /* Span across both columns */
     grid-row: 1; /* Position in the first row */
-    height: 56px;
     margin: 10px;
   }
 

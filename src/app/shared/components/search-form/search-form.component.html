@@ -1,0 +1,40 @@
+<form (ngSubmit)="onSearchSubmit(searchInput.value)" class="search-form"
+      matTooltip="Search term should be greater than 2 characters"
+      matTooltipPosition="above">
+  <div class="form-row">
+    <mat-form-field appearance="fill">
+      <mat-label>Search by URL</mat-label>
+      <input
+        matInput
+        #searchInput
+        type="text"
+        placeholder="Enter URL"
+        autocomplete="off"
+        [value]="searchTerm"
+      />
+    </mat-form-field>
+    <!-- Submit Button -->
+    <button
+      *ngIf="searchTerm === ''"
+      mat-icon-button
+      matSuffix
+      type="submit"
+      [disabled]="!searchInput.value || searchInput.value.length === 0"
+    >
+      <mat-icon>search</mat-icon>
+    </button>
+
+    <!-- Close Button -->
+    <button
+      class="close-button"
+      *ngIf="searchTerm"
+      mat-icon-button
+      matSuffix
+      type="button"
+      (click)="onClearSearch()"
+    >
+      <mat-icon>close</mat-icon>
+    </button>
+
+  </div>
+</form>
