@@ -52,7 +52,6 @@ import { MAX_NAME_LENGTH } from './models/bookmark-form.model';
   ],
 })
 export class BookmarkFormComponent implements OnInit, BaseFormInterface<UpdateBookmarkPayload> {
-  MAX_NAME_LENGTH = MAX_NAME_LENGTH;
   // Reference to the 'url' input field
   @ViewChild('urlInput', { read: ElementRef }) urlInput!: ElementRef;
   /**
@@ -82,6 +81,8 @@ export class BookmarkFormComponent implements OnInit, BaseFormInterface<UpdateBo
   @Output() closed = new EventEmitter<void>();
   // Input to determine orientation of the form i.e. horizontal or vertical
   @Input() orientation: 'horizontal' | 'vertical' = 'horizontal';
+
+  MAX_NAME_LENGTH = MAX_NAME_LENGTH;
 
   form!: FormGroup;
   destroyRef = inject(DestroyRef);
