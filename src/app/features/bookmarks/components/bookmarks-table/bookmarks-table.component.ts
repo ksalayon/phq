@@ -146,8 +146,8 @@ export class BookmarksTableComponent implements AfterViewInit, OnInit, OnChanges
   private updatePaginator(): void {
     if (this.paginator) {
       this.paginator.length = this.totalCount; // Total number of records
-      this.paginator.pageIndex = this.currentPageIndex || this.paginator.pageIndex;
-      this.paginator.pageSize = this.currentPageSize || this.paginator.pageSize;
+      this.paginator.pageIndex = this.currentPageIndex ?? this.paginator.pageIndex;
+      this.paginator.pageSize = this.currentPageSize ?? this.paginator.pageSize;
     }
   }
 }
