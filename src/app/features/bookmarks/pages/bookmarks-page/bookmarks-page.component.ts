@@ -23,7 +23,6 @@ import {
   debounceTime,
   distinctUntilChanged,
   Observable,
-  of,
   Subject,
   tap,
   withLatestFrom,
@@ -43,7 +42,7 @@ import { SnackbarService } from '../../../../shared/services/snackbar.service';
 import { AsyncPipe, CommonModule } from '@angular/common';
 import { MatProgressSpinner } from '@angular/material/progress-spinner';
 import { MatTooltip } from '@angular/material/tooltip';
-import { filter, map, switchMap } from 'rxjs/operators';
+import { filter, map } from 'rxjs/operators';
 import { MatButton } from '@angular/material/button';
 import { BookmarkService } from '../../services/bookmark.service';
 import { MatInputModule } from '@angular/material/input';
@@ -158,6 +157,7 @@ export class BookmarksPageComponent implements OnInit {
       .select(selectCurrentPageBookmarks(this.pageIndex, this.pageSize))
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((bookmarks) => {
+        this.isSearchLoading$.next(false);
         this.bookmarksSubject$.next(bookmarks);
       });
   }
@@ -169,20 +169,23 @@ export class BookmarksPageComponent implements OnInit {
         debounceTime(700),
         distinctUntilChanged(),
         withLatestFrom(this.searchPageState$),
-        tap(() => this.isSearchLoading$.next(true)),
-        switchMap(([query, searchPageState]) => {
+        tap(([query, searchPageState]) => {
           this.pageIndex = searchPageState.pageIndex;
           this.pageSize = searchPageState.pageSize;
-          return this.bookmarkService
-            .searchBookmarksByUrl(query, searchPageState.pageIndex, searchPageState.pageSize)
-            .pipe(map((results) => ({ results, searchPageState, query })));
+          const dispatchParam = {
+            urlQuery: query,
+            startIndex: searchPageState.pageIndex * searchPageState.pageSize,
+            limit: searchPageState.pageSize,
+          };
+          // Dispatch the searchBookmarksByUrl action with the query and pagination state
+          this.store.dispatch(BookmarksActions.searchBookmarksByUrl(dispatchParam));
+
+          // Set the loading state
+          this.isSearchLoading$.next(true);
         }),
         takeUntilDestroyed(this.destroyRef)
       )
-      .subscribe(({ results }) => {
-        this.isSearchLoading$.next(false);
-        this.bookmarksSubject$.next(results);
-      });
+      .subscribe();
   }
 
   monitorSearchResultCount() {
@@ -190,22 +193,21 @@ export class BookmarksPageComponent implements OnInit {
     this.bookmarksSubject$
       .pipe(
         withLatestFrom(this.searchTerm$),
-        switchMap(([results, searchTerm]) => {
+        tap(([results, searchTerm]) => {
           if (results.length && searchTerm !== currentSearchTerm) {
             currentSearchTerm = searchTerm;
-            return this.bookmarkService.getBookmarkSearchResultCount(searchTerm).pipe(
-              tap((count) => {
-                this.bookmarksTotalCountSUbject$.next(count);
-              })
+            // Dispatch the action to get the search result count
+            this.store.dispatch(
+              BookmarksActions.getBookmarkSearchResultCount({ search: searchTerm })
             );
           }
-          return of(null);
         }),
         takeUntilDestroyed(this.destroyRef)
       )
-      .subscribe((bookmarks) => {});
+      .subscribe();
   }
 
+  // Observe the selector for search result count and update the local state
   monitorBookmarksTotalCount() {
     this.store
       .select(selectBookmarksTotalCount)
@@ -240,30 +242,27 @@ export class BookmarksPageComponent implements OnInit {
     this.currentPageState$
       .pipe(
         withLatestFrom(this.searchTerm$),
-        switchMap(([pageState, search]) => {
+        tap(([pageState, search]) => {
+          const pageIndex = pageState.pageIndex || FIRST_PAGE_INDEX;
+          const pageSize = pageState.pageSize || DEFAULT_PAGE_SIZE;
           if (search) {
             this.isSearchLoading$.next(true);
-            console.log('changing pagination whiel on search mode');
-            return this.bookmarkService
-              .searchBookmarksByUrl(search, this.pageIndex, this.pageSize)
-              .pipe(
-                map((searchresults) => {
-                  console.log('searchresults after pagination', searchresults);
-                  this.bookmarksSubject$.next(searchresults);
-                  this.isSearchLoading$.next(false);
-                  return { pageState, search };
-                })
-              );
+            const dispatchParam = {
+              urlQuery: search,
+              startIndex: pageIndex * pageSize,
+              limit: pageSize,
+            };
+            // Dispatch the action to search bookmarks with pagination
+            this.store.dispatch(BookmarksActions.searchBookmarksByUrl(dispatchParam));
           }
-          return of({ pageState, search });
+          this.pageIndex = pageIndex;
+          this.pageSize = pageSize;
         }),
-        filter(({ search }) => !search),
+        filter(([_, search]) => !search), // Only proceed if no search term is provided
         takeUntilDestroyed(this.destroyRef)
       )
-      .subscribe(({ pageState }) => {
-        this.pageIndex = pageState?.pageIndex || 0;
-        this.pageSize = pageState?.pageSize || DEFAULT_PAGE_SIZE;
-        this.loadBookmarks(); // Load the page based on saved state
+      .subscribe(() => {
+        this.loadBookmarks(); // Load bookmarks based on the current state
       });
   }
 
@@ -301,7 +300,6 @@ export class BookmarksPageComponent implements OnInit {
         queryParamsHandling: 'merge',
       })
       .then();
-
     this.store.dispatch(
       BookmarksActions.saveCurrentPageState({
         pageIndex: event.pageIndex,

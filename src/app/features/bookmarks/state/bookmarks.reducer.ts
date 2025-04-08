@@ -140,5 +140,39 @@ export const bookmarksReducer = createReducer(
       pageIndex,
       pageSize,
     },
+  })),
+  // Search Bookmarks By Url
+  on(BookmarksActions.searchBookmarksByUrl, (state) => ({
+    ...state,
+    loading: true,
+  })),
+  on(BookmarksActions.searchBookmarksByUrlSuccess, (state, { bookmarks }) => {
+    return bookmarksAdapter.setAll(bookmarks, {
+      ...state,
+      loading: false,
+      error: null,
+    });
+  }),
+  on(BookmarksActions.searchBookmarksByUrlFailure, (state, { error }) => ({
+    ...state,
+    loading: false,
+    error,
+  })),
+
+  // Get Bookmark Search Result Count
+  on(BookmarksActions.getBookmarkSearchResultCount, (state) => ({
+    ...state,
+    loading: true,
+  })),
+  on(BookmarksActions.getBookmarkSearchResultCountSuccess, (state, { count }) => ({
+    ...state,
+    totalCount: count, // Store the search result count
+    loading: false,
+    error: null,
+  })),
+  on(BookmarksActions.getBookmarkSearchResultCountFailure, (state, { error }) => ({
+    ...state,
+    loading: false,
+    error,
   }))
 );

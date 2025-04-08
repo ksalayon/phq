@@ -2,7 +2,6 @@ import { Injectable } from '@angular/core';
 import { IDBPDatabase, openDB } from 'idb';
 import { Bookmark } from '../../models/bookmark';
 import { sampleBookmarks } from '../../utils/bookmarks.sample-data.util';
-import { DEFAULT_PAGE_SIZE, FIRST_PAGE_INDEX } from '../../models/bookmarks-table.models';
 
 const DB_NAME = 'BookmarksDB';
 const DB_VERSION = 7;
@@ -25,8 +24,6 @@ export class IndexedDbService {
    * @type {Promise<IDBPDatabase>}
    */
   private dbPromise: Promise<IDBPDatabase>;
-  private latestPageIndex = FIRST_PAGE_INDEX;
-  private latestPageSize = DEFAULT_PAGE_SIZE;
 
   constructor() {
     this.dbPromise = this.initializeDatabase();
@@ -105,8 +102,6 @@ export class IndexedDbService {
    *                                The bookmarks are returned in descending order of `createdAt`.
    */
   async getBookmarks(startIndex: number, limit: number): Promise<Bookmark[]> {
-    this.latestPageIndex = startIndex;
-    this.latestPageSize = limit;
     const db = await this.dbPromise;
     const transaction = db.transaction('bookmarks', 'readonly');
     const store = transaction.objectStore('bookmarks');
@@ -170,47 +165,31 @@ export class IndexedDbService {
     startIndex: number,
     limit: number
   ): Promise<Bookmark[]> {
-    console.log('searchBookmarksByUrl', urlQuery);
-    console.log('searchBookmarksByUrl startIndex', startIndex);
-    console.log('searchBookmarksByUrl limit', limit);
     const db = await this.dbPromise;
     const transaction = db.transaction('bookmarks', 'readonly');
     const store = transaction.objectStore('bookmarks');
     const index = store.index('url');
-    // Create an empty array to store matching results
-    // Iterate over all entries in the store
-    // let cursor = await store.openCursor();
-    // let cursor = await index.openCursor(null, 'prev');
-    // let currentIndex = 0;
-    // while (cursor && results.length < limit) {
-    //   const bookmark = cursor.value as Bookmark;
-    //   if (
-    //     bookmark.url.toLowerCase().includes(urlQuery.toLowerCase()) &&
-    //     currentIndex >= startIndex
-    //   ) {
-    //     results.push(bookmark);
-    //   }
-    //   cursor = await cursor.continue(); // move to the next record
-    //   currentIndex++;
-    // }
 
     const results: Bookmark[] = [];
     let cursor = await index.openCursor(null, 'prev'); // 'prev' ensures descending order
-
-    // Skip the initial items to handle pagination
-    let currentIndex = 0;
+    let skippedCount = 0; // Tracks how many matching items have been skipped
 
     while (cursor && results.length < limit) {
-      if (currentIndex >= startIndex) {
-        const bookmarkAtCursor = cursor.value as Bookmark;
-        if (bookmarkAtCursor.url.toLowerCase().includes(urlQuery.toLowerCase())) {
-          results.push(cursor.value as Bookmark);
+      const bookmarkAtCursor = cursor.value as Bookmark;
+
+      // Check if the bookmark URL matches the query
+      if (bookmarkAtCursor.url.toLowerCase().includes(urlQuery.toLowerCase())) {
+        // Skip items until the startIndex is reached
+        if (skippedCount < startIndex) {
+          skippedCount++; // Count this as skipped
+        } else {
+          results.push(bookmarkAtCursor); // Add to results if startIndex is reached
         }
       }
+
+      // Move to the next record
       cursor = await cursor.continue();
-      currentIndex++;
     }
-    console.log('searchBookmarksByUrl', results);
     return results;
   }
 

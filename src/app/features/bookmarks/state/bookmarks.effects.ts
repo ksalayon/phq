@@ -69,6 +69,36 @@ export class BookmarksEffects {
     )
   );
 
+  // Effect for Search Bookmarks By Url
+  searchBookmarksByUrl$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(BookmarksActions.searchBookmarksByUrl),
+      switchMap(({ urlQuery, startIndex, limit }) => {
+        return this.bookmarkService.searchBookmarksByUrl(urlQuery, startIndex, limit).pipe(
+          map((bookmarks) => BookmarksActions.searchBookmarksByUrlSuccess({ bookmarks })),
+          catchError((error) =>
+            of(BookmarksActions.searchBookmarksByUrlFailure({ error: error.message }))
+          )
+        );
+      })
+    )
+  );
+
+  // Effect for Get Bookmark Search Result Count
+  getBookmarkSearchResultCount$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(BookmarksActions.getBookmarkSearchResultCount),
+      switchMap(({ search }) =>
+        this.bookmarkService.getBookmarkSearchResultCount(search).pipe(
+          map((count) => BookmarksActions.getBookmarkSearchResultCountSuccess({ count })),
+          catchError((error) =>
+            of(BookmarksActions.getBookmarkSearchResultCountFailure({ error: error.message }))
+          )
+        )
+      )
+    )
+  );
+
   /**
    * Effect to handle the creation of a bookmark.
    * It first checks whether a bookmark with the same URL already exists in the store. If a duplicate URL is found,
