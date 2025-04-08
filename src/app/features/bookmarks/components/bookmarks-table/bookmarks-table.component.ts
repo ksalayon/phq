@@ -25,11 +25,10 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MatMenu, MatMenuItem, MatMenuTrigger } from '@angular/material/menu';
 import { MatIcon } from '@angular/material/icon';
 import { MatIconButton } from '@angular/material/button';
-import { SnackbarService } from '../../../../shared/services/snackbar.service';
 import { TimeAgoDetailedPipe } from '../../../../shared/pipes/time-ago-detailed.pipe';
-import { Store } from '@ngrx/store';
 import { OverflowTooltipDirective } from '../../../../shared/directives/overflow-tooltip.directive';
 import { MatTooltip } from '@angular/material/tooltip';
+import { BookmarkPermissions } from './models/bookmarks-table.model';
 
 @Component({
   standalone: true,
@@ -57,6 +56,7 @@ export class BookmarksTableComponent implements AfterViewInit, OnInit, OnChanges
   @Input({ required: true }) totalCount!: number;
   @Input({ required: true }) currentPageState$!: Observable<CurrentPageState>;
   @Input({ required: true }) loading$!: Observable<boolean>;
+  @Input({ required: true }) permissions!: BookmarkPermissions;
 
   // Emit an "Edit" event
   @Output() editBookmark = new EventEmitter<VMBookmark>();
@@ -75,8 +75,6 @@ export class BookmarksTableComponent implements AfterViewInit, OnInit, OnChanges
   ];
   dataSource: MatTableDataSource<Bookmark> = new MatTableDataSource<Bookmark>([]);
   private destroyRef = inject(DestroyRef);
-  private snackbarService = inject(SnackbarService);
-  private store = inject(Store);
   private currentPageIndex = FIRST_PAGE_INDEX;
   private currentPageSize = DEFAULT_PAGE_SIZE;
 
@@ -135,12 +133,6 @@ export class BookmarksTableComponent implements AfterViewInit, OnInit, OnChanges
 
   onView(row: VMBookmark) {
     this.viewBookmark.emit(row);
-  }
-
-  onCopy(row: VMBookmark) {
-    navigator.clipboard.writeText(row.url).then((r) => {
-      this.snackbarService.success('Successfully copied url');
-    });
   }
 
   private updatePaginator(): void {

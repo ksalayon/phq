@@ -29,6 +29,7 @@
     [totalCount]="(bookmarksTotalCount$ | async) || 0"
     [loading$]="loading$"
     [currentPageState$]="currentPageState$"
+    [permissions]="bookmarkPermissions"
     (deleteBookmark)="onDeleteBookmark($event)"
     (editBookmark)="onEditBookmark($event)"
     (viewBookmark)="onViewBookmark($event)"

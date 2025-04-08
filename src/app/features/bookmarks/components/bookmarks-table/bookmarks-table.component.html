@@ -44,19 +44,23 @@
           <mat-icon>more_vert</mat-icon>
         </button>
         <mat-menu #menu="matMenu">
-          <button mat-menu-item (click)="onEdit(element)">
+          <button mat-menu-item (click)="onEdit(element)" *ngIf="permissions.canEdit"
+          >
             <mat-icon>edit</mat-icon>
             <span>Edit</span>
           </button>
-          <button mat-menu-item (click)="onDelete(element)">
+          <button mat-menu-item (click)="onDelete(element)" *ngIf="permissions.canDelete"
+          >
             <mat-icon>delete</mat-icon>
             <span>Delete</span>
           </button>
-          <button mat-menu-item (click)="onVisit(element)">
+          <button mat-menu-item (click)="onVisit(element)" *ngIf="permissions.canVisit"
+          >
             <mat-icon>open_in_new</mat-icon>
             <span>Visit</span>
           </button>
-          <button mat-menu-item (click)="onView(element)">
+          <button mat-menu-item (click)="onView(element)" *ngIf="permissions.canView"
+          >
             <mat-icon>info</mat-icon>
             <span>View</span>
           </button>
