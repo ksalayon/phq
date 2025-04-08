@@ -13,7 +13,6 @@ import {
   BehaviorSubject,
   combineLatest,
   debounceTime,
-  distinctUntilChanged,
   Observable,
   Subject,
   tap,
@@ -172,7 +171,7 @@ export class BookmarksPageComponent implements OnInit {
       .pipe(
         filter((query) => !!query), // Only trigger this if the search string is not empty
         debounceTime(SEARCH_DEBOUNCE_TIME),
-        distinctUntilChanged(), // Make sure that it only triggers the rest of the pipe if the input is distinct
+        // distinctUntilChanged(), // Make sure that it only triggers the rest of the pipe if the input is distinct
         withLatestFrom(this.searchPageState$),
         tap(([query, searchPageState]) => {
           this.pageIndex = searchPageState.pageIndex;
@@ -296,7 +295,13 @@ export class BookmarksPageComponent implements OnInit {
     if (!searchTerm || searchTerm.trim().length < MIN_SEARCH_LENGTH) {
       return;
     }
-
+    this.bookmarkStateService.saveCurrentPageState(0, this.pageSize);
+    this.router
+      .navigate([], {
+        queryParams: { pageIndex: 0, pageSize: this.pageSize },
+        queryParamsHandling: 'merge',
+      })
+      .then();
     this.searchTerm$.next(searchTerm);
   }
 
@@ -306,8 +311,13 @@ export class BookmarksPageComponent implements OnInit {
    * @return {void} Does not return a value.
    */
   clearSearch(): void {
-    this.searchTerm$.next('');
-    this.onPaginatorChange({ pageIndex: 0, pageSize: DEFAULT_PAGE_SIZE });
+    // this.bookmarkStateService.saveCurrentPageState(0, this.pageSize);
+    // this.searchTerm$.next('');
+    // this.router.navigate([`/bookmarks`]).then();
+    this.pageIndex = 0; // Reset the page index to the first page
+    this.searchTerm$.next(''); // Clear the search term
+    this.bookmarkStateService.loadBookmarks(this.pageIndex, this.pageSize); // Reload all bookmarks
+    this.bookmarkStateService.saveCurrentPageState(this.pageIndex, this.pageSize); // Save state to redux/ngrx
   }
 
   /**

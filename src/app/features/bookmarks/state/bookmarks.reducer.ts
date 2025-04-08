@@ -134,13 +134,15 @@ export const bookmarksReducer = createReducer(
       error,
     };
   }),
-  on(BookmarksActions.saveCurrentPageState, (state, { pageIndex, pageSize }) => ({
-    ...state,
-    currentPage: {
-      pageIndex,
-      pageSize,
-    },
-  })),
+  on(BookmarksActions.saveCurrentPageState, (state, { pageIndex, pageSize }) => {
+    return {
+      ...state,
+      currentPage: {
+        pageIndex,
+        pageSize,
+      },
+    };
+  }),
   // Search Bookmarks By Url
   on(BookmarksActions.searchBookmarksByUrl, (state) => ({
     ...state,
