@@ -78,14 +78,16 @@ describe('BookmarksUtils', () => {
   describe('maxLengthValidator', () => {
     it('should return null if the control value is within the maximum length', () => {
       const control = { value: 'short string' } as AbstractControl;
-      const validator = BookmarksUtils.maxLengthValidator(20);
+      const maxLength = 20;
+      const validator = BookmarksUtils.maxLengthValidator(maxLength);
       const result = validator(control);
       expect(result).toBeNull();
     });
 
     it('should return an error if the control value exceeds the maximum length', () => {
       const control = { value: 'this is a very long string' } as AbstractControl;
-      const validator = BookmarksUtils.maxLengthValidator(10);
+      const maxLength = 10;
+      const validator = BookmarksUtils.maxLengthValidator(maxLength);
       const result = validator(control);
       expect(result).toEqual({
         maxLength: { requiredLength: 10, actualLength: 26 },

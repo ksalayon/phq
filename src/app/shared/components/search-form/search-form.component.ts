@@ -34,7 +34,7 @@ export class SearchFormComponent {
 
   constructor(private fb: FormBuilder) {
     this.searchForm = this.fb.group({
-      searchInput: ['', [Validators.minLength(3)]], // Requires at least 3 characters
+      searchInput: ['', [Validators.minLength(this.minCharacterLength)]], // Requires at least 3 characters
     });
   }
 
