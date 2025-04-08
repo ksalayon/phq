@@ -5,7 +5,7 @@ import { sampleBookmarks } from '../../utils/bookmarks.sample-data.util';
 
 const DB_NAME = 'BookmarksDB';
 const DB_VERSION = 7;
-const POPULATE_SAMPLE_DATA = true;
+const POPULATE_SAMPLE_DATA = false;
 
 /**
  * Service responsible for interacting with an IndexedDB instance for managing bookmarks.
