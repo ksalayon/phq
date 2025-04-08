@@ -28,14 +28,7 @@ export const routes: Routes = [
     ],
     children: [
       {
-        path: '',
-        loadComponent: () =>
-          import('./features/home/pages/home-page/home-page.component').then(
-            (m) => m.HomePageComponent
-          ),
-      },
-      {
-        path: 'bookmarks', // Route to the overview page
+        path: '', // Route to the overview page
         loadComponent: () =>
           import('./features/bookmarks/pages/bookmarks-page/bookmarks-page.component').then(
             (m) => m.BookmarksPageComponent
@@ -45,7 +38,7 @@ export const routes: Routes = [
         },
       },
       {
-        path: 'bookmarks/details/:id', // route to the bookmark details page
+        path: 'details/:id', // route to the bookmark details page
         loadComponent: () =>
           import('./features/bookmarks/pages/bookmark-details/bookmark-details.component').then(
             (m) => m.BookmarkDetailsComponent

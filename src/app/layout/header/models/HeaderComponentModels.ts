@@ -1,6 +1,5 @@
 const HeaderNavItems = Object.freeze({
-  Home: '',
-  Bookmarks: '/bookmarks',
+  Overview: '',
 } as const);
 
 export type HeaderNavKey = keyof typeof HeaderNavItems;

@@ -24,8 +24,5 @@ import { HeaderNavItem } from '../../header/models/HeaderComponentModels';
 })
 export class MainLayoutComponent {
   // defines the navigation links used for primary navigation in the header.
-  navLinks: HeaderNavItem[] = [
-    { path: '', label: 'Home' },
-    { path: '/bookmarks', label: 'Bookmarks' },
-  ];
+  navLinks: HeaderNavItem[] = [{ path: '', label: 'Overview' }];
 }
