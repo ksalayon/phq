@@ -49,8 +49,9 @@ export class BookmarksUtils {
         return null; // Optional field
       }
 
-      // Strict URL pattern (enforces two slashes after protocol)
-      const strictUrlPattern = /^https?:\/\/[^\s/$.?#].[^\s]*$/i;
+      // Adjusted strict URL pattern:
+      const strictUrlPattern =
+        /^(https?:\/\/)([a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)*|localhost|(\d{1,3}\.){3}\d{1,3})(:\d+)?(\/.*)?(\?.*)?(#.*)?$/;
 
       if (!strictUrlPattern.test(value)) {
         return { invalidUrl: true };
@@ -59,13 +60,14 @@ export class BookmarksUtils {
       try {
         const url = new URL(value);
 
+        // Validate allowed protocols
         if (url.protocol === 'http:' || url.protocol === 'https:') {
           return null;
         }
 
         return { invalidUrl: true };
       } catch {
-        return { invalidUrl: true };
+        return { invalidUrl: true }; // Invalid if URL parsing fails
       }
     };
   }
