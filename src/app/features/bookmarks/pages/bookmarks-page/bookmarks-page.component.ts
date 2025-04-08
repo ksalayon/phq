@@ -37,9 +37,10 @@ import { AsyncPipe, CommonModule } from '@angular/common';
 import { MatProgressSpinner } from '@angular/material/progress-spinner';
 import { MatTooltip } from '@angular/material/tooltip';
 import { filter, map } from 'rxjs/operators';
-import { MatButton } from '@angular/material/button';
+import { MatButton, MatIconButton } from '@angular/material/button';
 import { MatInputModule } from '@angular/material/input';
 import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatIcon } from '@angular/material/icon';
 
 /**
  * BookmarksPageComponent is a container component that provides functionality for managing bookmarks.
@@ -66,6 +67,8 @@ import { MatFormFieldModule } from '@angular/material/form-field';
     MatButton,
     MatFormFieldModule,
     MatInputModule,
+    MatIcon,
+    MatIconButton,
   ],
   templateUrl: './bookmarks-page.component.html',
   styleUrl: './bookmarks-page.component.scss',
@@ -166,9 +169,9 @@ export class BookmarksPageComponent implements OnInit {
   monitorBookmarkSearch(): void {
     this.searchTerm$
       .pipe(
-        filter((query) => !!query),
+        filter((query) => !!query), // Only trigger this if the search string is not empty
         debounceTime(SEARCH_DEBOUNCE_TIME),
-        distinctUntilChanged(),
+        distinctUntilChanged(), // Make sure that it only triggers the rest of the pipe if the input is distinct
         withLatestFrom(this.searchPageState$),
         tap(([query, searchPageState]) => {
           this.pageIndex = searchPageState.pageIndex;
@@ -293,6 +296,16 @@ export class BookmarksPageComponent implements OnInit {
     if (input && input.length > SEARCH_LENGTH_THRESHOLD) {
       this.searchTerm$.next(input); // Update the search term
     }
+  }
+
+  /**
+   * Clears the current search term and resets the paginator settings to default values.
+   * This brings the user back to the default first page of bookmarks.
+   * @return {void} Does not return a value.
+   */
+  clearSearch(): void {
+    this.searchTerm$.next('');
+    this.onPaginatorChange({ pageIndex: 0, pageSize: DEFAULT_PAGE_SIZE });
   }
 
   /**

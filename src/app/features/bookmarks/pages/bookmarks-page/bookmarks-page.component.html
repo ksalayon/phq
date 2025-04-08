@@ -22,8 +22,19 @@
     matInput
     type="text"
     placeholder="Enter URL"
+    [value]="searchTerm$ | async"
     (keyup)="onSearchInput($event)"
   />
+  <button
+    mat-icon-button
+    matSuffix
+    *ngIf="(searchTerm$ | async) as term"
+    [disabled]="!term || term.length === 0"
+    (click)="clearSearch()"
+  >
+    <mat-icon>close</mat-icon>
+  </button>
+
 </mat-form-field>
 
 
