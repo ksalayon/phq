@@ -86,7 +86,6 @@ export class IndexedDbService {
       cursor = await cursor.continue(); // move to the next record
       currentIndex++;
     }
-    console.log('search total count', totalCount);
     return totalCount;
   }
 
@@ -129,7 +128,13 @@ export class IndexedDbService {
     return bookmarks;
   }
 
-  // Get bookmark by ID
+  /**
+   * Fetches a bookmark by its unique identifier.
+   *
+   * @param {string} id - The unique identifier of the bookmark to retrieve.
+   * @return {Promise<Bookmark | undefined>} A promise that resolves to the bookmark object if found, or undefined if not found.
+   * @throws {Error} Throws an error if there is a failure during the retrieval process.
+   */
   async getBookmarkById(id: string): Promise<Bookmark | undefined> {
     try {
       const db = await this.dbPromise;
@@ -139,7 +144,13 @@ export class IndexedDbService {
     }
   }
 
-  // get bookmark by URL
+  /**
+   * Fetches a bookmark from the storage by its URL.
+   *
+   * @param {string} url - The URL of the bookmark to retrieve.
+   * @return {Promise<Bookmark | undefined>} A promise that resolves with the bookmark object if found, or undefined if not.
+   * @throws {Error} If there is an issue accessing the database or fetching the bookmark.
+   */
   async getBookmarkByUrl(url: string): Promise<Bookmark | undefined> {
     try {
       const db = await this.dbPromise;
@@ -149,7 +160,13 @@ export class IndexedDbService {
     }
   }
 
-  // Delete bookmark
+  /**
+   * Deletes a bookmark with the specified ID from the database.
+   *
+   * @param {Bookmark['id']} id - The unique identifier of the bookmark to delete.
+   * @return {Promise<Bookmark['id']>} A promise that resolves to the ID of the deleted bookmark.
+   * @throws {Error} If the deletion process fails.
+   */
   async deleteBookmark(id: Bookmark['id']): Promise<Bookmark['id']> {
     try {
       const db = await this.dbPromise;
@@ -160,6 +177,14 @@ export class IndexedDbService {
     }
   }
 
+  /**
+   * Searches for bookmarks matching the specified URL query, ordered in descending order by URL index.
+   *
+   * @param {string} urlQuery - The substring or query string to match in the bookmark URLs.
+   * @param {number} startIndex - The number of matching bookmarks to skip before returning results.
+   * @param {number} limit - The maximum number of bookmarks to return in the results array.
+   * @return {Promise<Bookmark[]>} A promise that resolves to an array of bookmarks that match the query.
+   */
   async searchBookmarksByUrl(
     urlQuery: string,
     startIndex: number,

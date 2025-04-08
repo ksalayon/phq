@@ -30,6 +30,8 @@ import {
 import {
   DEFAULT_PAGE_SIZE,
   FIRST_PAGE_INDEX,
+  SEARCH_DEBOUNCE_TIME,
+  SEARCH_LENGTH_THRESHOLD,
   VMBookmark,
 } from '../../models/bookmarks-table.models';
 import { ModalService } from '../../../../shared/services/modal-dialog.service';
@@ -152,7 +154,13 @@ export class BookmarksPageComponent implements OnInit {
     this.monitorQueryParams();
   }
 
-  monitorPaginatedBookmarks() {
+  /**
+   * Monitors and subscribes to the paginated bookmarks based on the current page index and page size.
+   * Fetches the bookmarks using the store selector and updates the respective observables.
+   *
+   * @return {void} No return value.
+   */
+  monitorPaginatedBookmarks(): void {
     this.store
       .select(selectCurrentPageBookmarks(this.pageIndex, this.pageSize))
       .pipe(takeUntilDestroyed(this.destroyRef))
@@ -162,11 +170,20 @@ export class BookmarksPageComponent implements OnInit {
       });
   }
 
-  monitorBookmarkSearch() {
+  /**
+   * Monitors the bookmark search functionality by listening to search term inputs,
+   * applying filters, debouncing, and managing pagination. It dispatches an action
+   * to execute a search operation with the current query and pagination parameters,
+   * and updates the search loading state in the process.
+   *
+   * @return {void} Executes the necessary operations to handle bookmark search,
+   * including dispatching actions and updating internal states.
+   */
+  monitorBookmarkSearch(): void {
     this.searchTerm$
       .pipe(
         filter((query) => !!query),
-        debounceTime(700),
+        debounceTime(SEARCH_DEBOUNCE_TIME),
         distinctUntilChanged(),
         withLatestFrom(this.searchPageState$),
         tap(([query, searchPageState]) => {
@@ -188,6 +205,13 @@ export class BookmarksPageComponent implements OnInit {
       .subscribe();
   }
 
+  /**
+   * Monitors the search result count for bookmark results based on the current search term.
+   * Compares the current search term with the previous one and dispatches an action to fetch
+   * the search result count if they differ and there are results present.
+   *
+   * @return {void} Does not return a value.
+   */
   monitorSearchResultCount() {
     let currentSearchTerm = '';
     this.bookmarksSubject$
@@ -207,7 +231,11 @@ export class BookmarksPageComponent implements OnInit {
       .subscribe();
   }
 
-  // Observe the selector for search result count and update the local state
+  /**
+   * Monitors the total count of bookmarks and updates the internal subject with the count.
+   *
+   * @return {void} This method does not return any value.
+   */
   monitorBookmarksTotalCount() {
     this.store
       .select(selectBookmarksTotalCount)
@@ -220,7 +248,13 @@ export class BookmarksPageComponent implements OnInit {
       });
   }
 
-  monitorQueryParams() {
+  /**
+   * Monitors changes to query parameters (specifically `pageIndex` and `pageSize`), updates the local state,
+   * and dispatches the updated values to the store. This may also trigger loading of bookmarks for the current page.
+   *
+   * @return {void} This method does not return a value.
+   */
+  monitorQueryParams(): void {
     // Listens to queryParams changes (pageIndex and pageSize in particular)
     // and dispatches those values to the store and may trigger loading of bookmarks for that page
     this.route.queryParams.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((params) => {
@@ -237,8 +271,12 @@ export class BookmarksPageComponent implements OnInit {
     });
   }
 
-  // Listens to pagination changes and loads bookmarks with those changes
-  monitorPaginationChanges() {
+  /**
+   * Monitors changes in pagination state and manages the logic for loading bookmarks or performing search operations based on the current page state and search term.
+   *
+   * @return {void} This method does not return a value. It performs side effects such as dispatching actions and triggering data loading.
+   */
+  monitorPaginationChanges(): void {
     this.currentPageState$
       .pipe(
         withLatestFrom(this.searchTerm$),
@@ -266,15 +304,27 @@ export class BookmarksPageComponent implements OnInit {
       });
   }
 
-  onSearchInput(event: Event) {
+  /**
+   * Handles the user input from a search field. Updates the search term stream
+   * if the input length is greater than 2 characters.
+   *
+   * @param {Event} event - The event object triggered by the input field.
+   * @return {void} This method does not return a value.
+   */
+  onSearchInput(event: Event): void {
     const input = (event.target as HTMLInputElement).value;
-    if (input && input.length > 2) {
+    if (input && input.length > SEARCH_LENGTH_THRESHOLD) {
       this.searchTerm$.next(input); // Update the search term
     }
   }
 
-  // Method to load bookmarks for the current page
-  loadBookmarks() {
+  /**
+   * Loads bookmarks by dispatching an action to fetch a subset of bookmarks
+   * based on the current page index and page size.
+   *
+   * @return {void} This method does not return a value.
+   */
+  loadBookmarks(): void {
     this.store.dispatch(
       BookmarksActions.loadBookmarks({
         startIndex: this.pageIndex * this.pageSize,
