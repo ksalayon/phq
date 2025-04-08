@@ -1,8 +1,10 @@
 <div *ngIf="(bookmarksTotalCount$ | async) === 0 && (loading$ | async) === false" class="empty-state">
   <p class="empty-message">
-    There are no bookmarks yet - start adding them!
+    {{ (searchTerm$ | async) === '' ? 'There are no bookmarks yet - start adding them!' : 'No results found' }}
   </p>
-  <button mat-raised-button color="primary" (click)="focusOnForm()">Create Your First Bookmark</button>
+  <button mat-raised-button color="primary" (click)="focusOnForm()" *ngIf="(searchTerm$ | async) === ''">Create Your
+    First Bookmark
+  </button>
 </div>
 
 
@@ -15,6 +17,10 @@
 
 >
 </phq-bookmark-form>
+
+<phq-search-form class="search-form" (clearSearch)="clearSearch()" (searched)="onSearchSubmit($event)"
+                 [searchTerm]="(searchTerm$ | async) ?? ''"></phq-search-form>
+
 
 <div class="bookmarks__list">
   <phq-bookmarks-table

@@ -1,7 +1,9 @@
+import { v4 as uuidv4 } from 'uuid';
 import { inject, Injectable } from '@angular/core';
 import { from, Observable, throwError } from 'rxjs';
 import {
   Bookmark,
+  BookmarksSearchParams,
   CreateBookmarkPayload,
   defaultBookmarkGroup,
   UpdateBookmarkPayload,
@@ -9,8 +11,13 @@ import {
 import { IndexedDbService } from './persistence/indexed-db.service';
 import { switchMap, take } from 'rxjs/operators';
 
+/**
+ * The BookmarkDataService provides operations for managing bookmarks,
+ * including creating, retrieving, updating, deleting, and searching bookmarks.
+ * This service interacts with an IndexedDb-based service to perform data persistence.
+ */
 @Injectable()
-export class BookmarkService {
+export class BookmarkDataService {
   private indexedDbService = inject(IndexedDbService);
 
   constructor() {}
@@ -21,6 +28,10 @@ export class BookmarkService {
 
   getBookmarksCount() {
     return from(this.indexedDbService.getBookmarksCount());
+  }
+
+  getBookmarkSearchResultCount(search: string): Observable<number> {
+    return from(this.indexedDbService.getBookmarksSearchCount(search));
   }
 
   getBookmark(id: Bookmark['id']) {
@@ -66,7 +77,7 @@ export class BookmarkService {
   }
 
   createBookmark(bookmark: CreateBookmarkPayload): Observable<Bookmark> {
-    const uniqueId = crypto.randomUUID(); // Generate the unique ID for the bookmark entity
+    const uniqueId: string = uuidv4(); // Generate the unique ID for the bookmark entity
     const currentDate = new Date();
     const newBookmark = {
       ...bookmark,
@@ -76,5 +87,10 @@ export class BookmarkService {
       bookmarkGroupId: defaultBookmarkGroup.name,
     } as Bookmark;
     return from(this.indexedDbService.saveBookmark(newBookmark));
+  }
+
+  searchBookmarksByUrl(arg: BookmarksSearchParams): Observable<Bookmark[]> {
+    const { urlQuery, startIndex, limit } = arg;
+    return from(this.indexedDbService.searchBookmarksByUrl(urlQuery, startIndex, limit));
   }
 }

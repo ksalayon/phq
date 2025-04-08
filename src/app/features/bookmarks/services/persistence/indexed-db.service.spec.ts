@@ -200,7 +200,8 @@ describe('IndexedDbService', () => {
 
   describe('getBookmarksCount', () => {
     it('should return the total count of bookmarks', async () => {
-      const countMock = jest.fn().mockResolvedValue(5);
+      const countMockValue = 5;
+      const countMock = jest.fn().mockResolvedValue(countMockValue);
       mockDb.transaction.mockReturnValue({
         objectStore: jest.fn().mockReturnValue({
           count: countMock,
@@ -210,7 +211,7 @@ describe('IndexedDbService', () => {
       const count = await service.getBookmarksCount();
 
       expect(countMock).toHaveBeenCalled();
-      expect(count).toBe(5);
+      expect(count).toBe(countMockValue);
     });
   });
 
@@ -255,8 +256,10 @@ describe('IndexedDbService', () => {
           indexNames: { contains: jest.fn().mockReturnValue(false) }, // Simulate missing index
         }),
       } as any);
-
-      await expect(service.getBookmarks(0, 10)).rejects.toThrow('The `createdAt` index is missing');
+      const limit = 10;
+      await expect(service.getBookmarks(0, limit)).rejects.toThrow(
+        'The `createdAt` index is missing'
+      );
     });
   });
 });

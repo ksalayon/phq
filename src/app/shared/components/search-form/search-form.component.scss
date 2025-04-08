@@ -1,0 +1,21 @@
+:host {
+  height: 56px;
+  display: flex;
+  gap: 1rem;
+  position: relative;
+
+  .close-button[mat-icon-button] {
+    margin-left: 5px;
+    background-color: #F6C6CE; /* Light background for better visibility */
+    border-radius: 50%; /* Circular buttons */
+    transition: background-color 0.3s ease, transform 0.2s ease; /* Smooth hover/active effects */
+  }
+
+  .beta-chip {
+    font-size: 0.75rem;
+    height: 24px;
+    position: absolute;
+    left: 0;
+    top: -27px;
+  }
+}

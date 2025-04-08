@@ -77,7 +77,7 @@ export class BookmarkDetailsComponent implements OnInit {
         // then always redirect user to the first page
         if (isForNewBookmark) {
           this.router
-            .navigate(['/bookmarks'], {
+            .navigate(['/'], {
               queryParams: { pageIndex: 0, pageSize },
             })
             .then();
@@ -86,7 +86,7 @@ export class BookmarkDetailsComponent implements OnInit {
         // Navigate back to the bookmarks page with queryParams - goes back to the
         // same page where the user initially came from to view this bookmark
         this.router
-          .navigate(['/bookmarks'], {
+          .navigate(['/'], {
             queryParams: { pageIndex, pageSize },
           })
           .then();

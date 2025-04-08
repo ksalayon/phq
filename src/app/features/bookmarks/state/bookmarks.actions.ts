@@ -1,5 +1,10 @@
 import { createActionGroup, props } from '@ngrx/store';
-import { Bookmark, CreateBookmarkPayload, UpdateBookmarkPayload } from '../models/bookmark';
+import {
+  Bookmark,
+  BookmarksSearchParams,
+  CreateBookmarkPayload,
+  UpdateBookmarkPayload,
+} from '../models/bookmark';
 
 /**
  * BookmarksActions is a collection of actions used within a bookmarking application context.
@@ -26,5 +31,11 @@ export const BookmarksActions = createActionGroup({
     'Delete Bookmark Success': props<{ id: Bookmark['id'] }>(),
     'Delete Bookmark Failure': props<{ error: string }>(),
     'Save Current Page State': props<{ pageIndex: number; pageSize: number }>(),
+    'Search Bookmarks By Url': props<{ payload: BookmarksSearchParams }>(),
+    'Search Bookmarks By Url Success': props<{ bookmarks: Bookmark[] }>(),
+    'Search Bookmarks By Url Failure': props<{ error: string }>(),
+    'Get Bookmark Search Result Count': props<{ search: string }>(),
+    'Get Bookmark Search Result Count Success': props<{ count: number }>(),
+    'Get Bookmark Search Result Count Failure': props<{ error: string }>(),
   },
 });

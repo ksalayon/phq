@@ -62,6 +62,33 @@ export class IndexedDbService {
     return await store.count();
   }
 
+  // Get bookmarks count by search term
+  // Need to have a separate call for this so it can be called after the actual
+  // search results more efficiently and so it wouldn't block
+  // the response from the actual search
+  async getBookmarksSearchCount(urlQuery: string): Promise<number> {
+    const db = await this.dbPromise;
+    const transaction = db.transaction('bookmarks', 'readonly');
+    const store = transaction.objectStore('bookmarks');
+    const index = store.index('url');
+    // Create an empty array to store matching results
+
+    // Iterate over all entries in the store
+    // let cursor = await store.openCursor();
+    let cursor = await index.openCursor(null, 'prev');
+    let currentIndex = 0;
+    let totalCount = 0;
+    while (cursor) {
+      const bookmark = cursor.value as Bookmark;
+      if (bookmark.url.toLowerCase().includes(urlQuery.toLowerCase())) {
+        totalCount++;
+      }
+      cursor = await cursor.continue(); // move to the next record
+      currentIndex++;
+    }
+    return totalCount;
+  }
+
   /**
    * Retrieves a list of bookmarks from the database, ordered by the `createdAt` index in descending order.
    * This method supports pagination by specifying the `startIndex` and `limit` parameters.
@@ -101,7 +128,13 @@ export class IndexedDbService {
     return bookmarks;
   }
 
-  // Get bookmark by ID
+  /**
+   * Fetches a bookmark by its unique identifier.
+   *
+   * @param {string} id - The unique identifier of the bookmark to retrieve.
+   * @return {Promise<Bookmark | undefined>} A promise that resolves to the bookmark object if found, or undefined if not found.
+   * @throws {Error} Throws an error if there is a failure during the retrieval process.
+   */
   async getBookmarkById(id: string): Promise<Bookmark | undefined> {
     try {
       const db = await this.dbPromise;
@@ -111,7 +144,13 @@ export class IndexedDbService {
     }
   }
 
-  // get bookmark by URL
+  /**
+   * Fetches a bookmark from the storage by its URL.
+   *
+   * @param {string} url - The URL of the bookmark to retrieve.
+   * @return {Promise<Bookmark | undefined>} A promise that resolves with the bookmark object if found, or undefined if not.
+   * @throws {Error} If there is an issue accessing the database or fetching the bookmark.
+   */
   async getBookmarkByUrl(url: string): Promise<Bookmark | undefined> {
     try {
       const db = await this.dbPromise;
@@ -121,7 +160,13 @@ export class IndexedDbService {
     }
   }
 
-  // Delete bookmark
+  /**
+   * Deletes a bookmark with the specified ID from the database.
+   *
+   * @param {Bookmark['id']} id - The unique identifier of the bookmark to delete.
+   * @return {Promise<Bookmark['id']>} A promise that resolves to the ID of the deleted bookmark.
+   * @throws {Error} If the deletion process fails.
+   */
   async deleteBookmark(id: Bookmark['id']): Promise<Bookmark['id']> {
     try {
       const db = await this.dbPromise;
@@ -130,6 +175,47 @@ export class IndexedDbService {
     } catch {
       throw Error('Failed to delete bookmark.');
     }
+  }
+
+  /**
+   * Searches for bookmarks matching the specified URL query, ordered in descending order by URL index.
+   *
+   * @param {string} urlQuery - The substring or query string to match in the bookmark URLs.
+   * @param {number} startIndex - The number of matching bookmarks to skip before returning results.
+   * @param {number} limit - The maximum number of bookmarks to return in the results array.
+   * @return {Promise<Bookmark[]>} A promise that resolves to an array of bookmarks that match the query.
+   */
+  async searchBookmarksByUrl(
+    urlQuery: string,
+    startIndex: number,
+    limit: number
+  ): Promise<Bookmark[]> {
+    const db = await this.dbPromise;
+    const transaction = db.transaction('bookmarks', 'readonly');
+    const store = transaction.objectStore('bookmarks');
+    const index = store.index('url');
+
+    const results: Bookmark[] = [];
+    let cursor = await index.openCursor(null, 'prev'); // 'prev' ensures descending order
+    let skippedCount = 0; // Tracks how many matching items have been skipped
+
+    while (cursor && results.length < limit) {
+      const bookmarkAtCursor = cursor.value as Bookmark;
+
+      // Check if the bookmark URL matches the query
+      if (bookmarkAtCursor.url.toLowerCase().includes(urlQuery.toLowerCase())) {
+        // Skip items until the startIndex is reached
+        if (skippedCount < startIndex) {
+          skippedCount++; // Count this as skipped
+        } else {
+          results.push(bookmarkAtCursor); // Add to results if startIndex is reached
+        }
+      }
+
+      // Move to the next record
+      cursor = await cursor.continue();
+    }
+    return results;
   }
 
   // Initialize the IndexedDB database

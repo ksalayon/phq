@@ -1,4 +1,5 @@
 import { Bookmark } from '../models/bookmark';
+import { v4 as uuidv4 } from 'uuid';
 
 const defaultNumbers = Object.freeze({
   sampleLength: 50000,
@@ -33,7 +34,7 @@ export const sampleBookmarks: Bookmark[] = Array.from(
     );
 
     return {
-      id: crypto.randomUUID(),
+      id: uuidv4(),
       name: `Sample Bookmark ${index + 1}`,
       url: `https://example.com/bookmark-${index + 1}`,
       createdAt,

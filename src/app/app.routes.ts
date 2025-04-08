@@ -1,6 +1,6 @@
 import { Routes } from '@angular/router';
 import { MainLayoutComponent } from './layout/main/main-layout/main-layout.component';
-import { BookmarkService } from './features/bookmarks/services/bookmark.service';
+import { BookmarkDataService } from './features/bookmarks/services/bookmark-data.service';
 import { provideState } from '@ngrx/store';
 import {
   bookmarksFeatureKey,
@@ -21,21 +21,14 @@ export const routes: Routes = [
     // to avoid duplicated instances
     providers: [
       IndexedDbService,
-      BookmarkService,
+      BookmarkDataService,
       BookmarkStateService,
       provideState({ name: bookmarksFeatureKey, reducer: bookmarksReducer }),
       provideEffects([BookmarksEffects]),
     ],
     children: [
       {
-        path: '',
-        loadComponent: () =>
-          import('./features/home/pages/home-page/home-page.component').then(
-            (m) => m.HomePageComponent
-          ),
-      },
-      {
-        path: 'bookmarks', // Route to the overview page
+        path: '', // Route to the overview page
         loadComponent: () =>
           import('./features/bookmarks/pages/bookmarks-page/bookmarks-page.component').then(
             (m) => m.BookmarksPageComponent
@@ -45,7 +38,7 @@ export const routes: Routes = [
         },
       },
       {
-        path: 'bookmarks/details/:id', // route to the bookmark details page
+        path: 'details/:id', // route to the bookmark details page
         loadComponent: () =>
           import('./features/bookmarks/pages/bookmark-details/bookmark-details.component').then(
             (m) => m.BookmarkDetailsComponent
