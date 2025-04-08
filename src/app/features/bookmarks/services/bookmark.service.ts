@@ -23,6 +23,10 @@ export class BookmarkService {
     return from(this.indexedDbService.getBookmarksCount());
   }
 
+  getBookmarkSearchResultCount(search: string): Observable<number> {
+    return from(this.indexedDbService.getBookmarksSearchCount(search));
+  }
+
   getBookmark(id: Bookmark['id']) {
     return from(this.indexedDbService.getBookmarkById(id));
   }
@@ -76,5 +80,13 @@ export class BookmarkService {
       bookmarkGroupId: defaultBookmarkGroup.name,
     } as Bookmark;
     return from(this.indexedDbService.saveBookmark(newBookmark));
+  }
+
+  searchBookmarksByUrl(
+    urlQuery: string,
+    startIndex: number,
+    limit: number
+  ): Observable<Bookmark[]> {
+    return from(this.indexedDbService.searchBookmarksByUrl(urlQuery, startIndex, limit));
   }
 }

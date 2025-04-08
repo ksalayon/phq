@@ -17,7 +17,16 @@ import {
   selectCurrentPageState,
   selectLoading,
 } from '../../state/bookmarks.selectors';
-import { BehaviorSubject, Observable, Subject } from 'rxjs';
+import {
+  BehaviorSubject,
+  debounceTime,
+  distinctUntilChanged,
+  Observable,
+  of,
+  Subject,
+  tap,
+  withLatestFrom,
+} from 'rxjs';
 import {
   DEFAULT_PAGE_SIZE,
   FIRST_PAGE_INDEX,
@@ -33,8 +42,11 @@ import { SnackbarService } from '../../../../shared/services/snackbar.service';
 import { AsyncPipe, CommonModule } from '@angular/common';
 import { MatProgressSpinner } from '@angular/material/progress-spinner';
 import { MatTooltip } from '@angular/material/tooltip';
-import { map } from 'rxjs/operators';
+import { filter, map, switchMap } from 'rxjs/operators';
 import { MatButton } from '@angular/material/button';
+import { BookmarkService } from '../../services/bookmark.service';
+import { MatInputModule } from '@angular/material/input';
+import { MatFormFieldModule } from '@angular/material/form-field';
 
 /**
  * BookmarksPageComponent is a container component that provides functionality for managing bookmarks.
@@ -63,6 +75,8 @@ import { MatButton } from '@angular/material/button';
     MatProgressSpinner,
     MatTooltip,
     MatButton,
+    MatFormFieldModule,
+    MatInputModule,
   ],
   templateUrl: './bookmarks-page.component.html',
   styleUrl: './bookmarks-page.component.scss',
@@ -84,36 +98,34 @@ export class BookmarksPageComponent implements OnInit {
   bookmarkCreateErrorSubject$: Subject<string | null> | undefined = new Subject<string | null>();
   bookmarkCreateError$ = this.bookmarkCreateErrorSubject$?.asObservable();
 
+  searchTerm$ = new BehaviorSubject<string>(''); // Manages the search input
+
+  bookmarksSubject$ = new BehaviorSubject<Bookmark[]>([]);
+  bookmarks$ = this.bookmarksSubject$.asObservable();
+
   destroyRef = inject(DestroyRef);
   // modal service from shared directory
   modalService = inject(ModalService);
   bookmarkStateService = inject(BookmarkStateService);
+
+  bookmarksTotalCountSUbject$ = new BehaviorSubject<number>(0);
+  bookmarksTotalCount$ = this.bookmarksTotalCountSUbject$.asObservable();
+
   private store = inject(Store);
 
   private router = inject(Router);
   private snackbarService = inject(SnackbarService);
   private route = inject(ActivatedRoute);
+  private bookmarkService = inject(BookmarkService);
 
-  /**
-   * Retrieves an observable stream of all bookmarks from the store.
-   *
-   * @return {Observable<Array>} An observable emitting an array of all bookmarks.
-   */
-  get bookmarks$(): Observable<Bookmark[]> {
-    return this.store.select(selectCurrentPageBookmarks(this.pageIndex, this.pageSize));
-  }
+  private searchPageState$ = new BehaviorSubject<CurrentPageState & { totalCount: number }>({
+    pageIndex: 0,
+    pageSize: 20,
+    totalCount: 0,
+  });
 
   get loading$(): Observable<boolean> {
     return this.store.select(selectLoading);
-  }
-
-  /**
-   * Getter method that retrieves an Observable representing the total count of bookmarks.
-   *
-   * @return {Observable<number>} An Observable emitting the current total count of bookmarks from the store.
-   */
-  get bookmarksTotalCount$(): Observable<number> {
-    return this.store.select(selectBookmarksTotalCount).pipe(map((count) => count ?? 0));
   }
 
   /**
@@ -128,12 +140,88 @@ export class BookmarksPageComponent implements OnInit {
   }
 
   ngOnInit() {
+    this.store
+      .select(selectCurrentPageBookmarks(this.pageIndex, this.pageSize))
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((bookmarks) => {
+        this.bookmarksSubject$.next(bookmarks);
+      });
+
+    this.searchTerm$
+      .pipe(
+        filter((query) => !!query),
+        debounceTime(700),
+        distinctUntilChanged(),
+        withLatestFrom(this.searchPageState$),
+        switchMap(([query, searchPageState]) => {
+          this.pageIndex = searchPageState.pageIndex;
+          this.pageSize = searchPageState.pageSize;
+          return this.bookmarkService
+            .searchBookmarksByUrl(query, searchPageState.pageIndex, searchPageState.pageSize)
+            .pipe(map((results) => ({ results, searchPageState, query })));
+        }),
+        takeUntilDestroyed(this.destroyRef)
+      )
+      .subscribe(({ results }) => {
+        this.bookmarksSubject$.next(results);
+      });
+
+    let currentSearchTerm = '';
+    this.bookmarksSubject$
+      .pipe(
+        withLatestFrom(this.searchTerm$),
+        switchMap(([results, searchTerm]) => {
+          if (results.length && searchTerm !== currentSearchTerm) {
+            currentSearchTerm = searchTerm;
+            return this.bookmarkService.getBookmarkSearchResultCount(searchTerm).pipe(
+              tap((count) => {
+                this.bookmarksTotalCountSUbject$.next(count);
+              })
+            );
+          }
+          return of(null);
+        }),
+        takeUntilDestroyed(this.destroyRef)
+      )
+      .subscribe((bookmarks) => {});
+
+    this.store
+      .select(selectBookmarksTotalCount)
+      .pipe(
+        map((count) => count ?? 0),
+        takeUntilDestroyed(this.destroyRef)
+      )
+      .subscribe((count) => {
+        this.bookmarksTotalCountSUbject$.next(count);
+      });
+
     // Listens to pagination changes and loads bookmarks with those changes
-    this.currentPageState$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((pageState) => {
-      this.pageIndex = pageState?.pageIndex || 0;
-      this.pageSize = pageState?.pageSize || DEFAULT_PAGE_SIZE;
-      this.loadBookmarks(); // Load the page based on saved state
-    });
+    this.currentPageState$
+      .pipe(
+        withLatestFrom(this.searchTerm$),
+        switchMap(([pageState, search]) => {
+          if (search) {
+            console.log('changing pagination whiel on search mode');
+            return this.bookmarkService
+              .searchBookmarksByUrl(search, this.pageIndex, this.pageSize)
+              .pipe(
+                map((searchresults) => {
+                  console.log('searchresults after pagination', searchresults);
+                  this.bookmarksSubject$.next(searchresults);
+                  return { pageState, search };
+                })
+              );
+          }
+          return of({ pageState, search });
+        }),
+        filter(({ search }) => !search),
+        takeUntilDestroyed(this.destroyRef)
+      )
+      .subscribe(({ pageState }) => {
+        this.pageIndex = pageState?.pageIndex || 0;
+        this.pageSize = pageState?.pageSize || DEFAULT_PAGE_SIZE;
+        this.loadBookmarks(); // Load the page based on saved state
+      });
 
     // Listens to queryParams changes (pageIndex and pageSize in particular)
     // and dispatches those values to the store and may trigger loading of bookmarks for that page
@@ -149,6 +237,13 @@ export class BookmarksPageComponent implements OnInit {
         })
       );
     });
+  }
+
+  onSearchInput(event: Event) {
+    const input = (event.target as HTMLInputElement).value;
+    if (input && input.length > 2) {
+      this.searchTerm$.next(input); // Update the search term
+    }
   }
 
   // Method to load bookmarks for the current page

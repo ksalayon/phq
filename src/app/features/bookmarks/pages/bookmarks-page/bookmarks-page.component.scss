@@ -1,7 +1,7 @@
 :host {
   display: grid; /* Enable grid layout */
   grid-template-rows: 100px auto; /* Form takes 100px height, the rest is available space */
-  grid-template-columns: auto; /* Main content takes available space, sidebar gets 40px */
+  grid-template-columns: auto auto; /* Main content takes available space, sidebar gets 40px */
   height: 100vh; /* Full viewport height */
   width: 100%; /* Full width of the container */
 
@@ -14,10 +14,17 @@
     height: 100%; /* Fill its row (100px) */
   }
 
+  .search-bar {
+    grid-column: 2; /* Span across both columns */
+    grid-row: 1; /* Position in the first row */
+    height: 56px;
+    margin: 10px;
+  }
+
   /* Table of lists below the form */
 
   .bookmarks__list, .empty-state {
-    grid-column: 1; /* Occupies the first column */
+    grid-column: 1 / -1; /* Occupies the first column */
     grid-row: 2; /* Position in the second row */
     height: 100%; /* Fill the remaining vertical space */
     overflow-y: auto; /* Enable scrolling for long content */

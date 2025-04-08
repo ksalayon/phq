@@ -73,8 +73,7 @@ export class BookmarksTableComponent implements AfterViewInit, OnInit, OnChanges
     'modifiedAt',
     'actions',
   ];
-  dataSource!: MatTableDataSource<Bookmark>;
-
+  dataSource: MatTableDataSource<Bookmark> = new MatTableDataSource<Bookmark>([]);
   private destroyRef = inject(DestroyRef);
   private snackbarService = inject(SnackbarService);
   private store = inject(Store);
@@ -106,8 +105,10 @@ export class BookmarksTableComponent implements AfterViewInit, OnInit, OnChanges
   }
 
   ngAfterViewInit(): void {
-    this.dataSource.paginator = this.paginator;
-    this.updatePaginator(); // Ensure paginator length is updated properly
+    if (this.paginator) {
+      this.dataSource.paginator = this.paginator;
+      this.updatePaginator(); // Ensure paginator length is updated properly
+    }
   }
 
   ngOnChanges() {

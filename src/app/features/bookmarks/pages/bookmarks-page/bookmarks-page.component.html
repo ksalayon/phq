@@ -16,6 +16,17 @@
 >
 </phq-bookmark-form>
 
+<mat-form-field class="search-bar" appearance="outline">
+  <mat-label>Search by URL</mat-label>
+  <input
+    matInput
+    type="text"
+    placeholder="Enter URL"
+    (keyup)="onSearchInput($event)"
+  />
+</mat-form-field>
+
+
 <div class="bookmarks__list">
   <phq-bookmarks-table
     *ngIf="(bookmarksTotalCount$ | async) ?? 0 > 0"
