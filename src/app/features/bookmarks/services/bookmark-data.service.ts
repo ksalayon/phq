@@ -11,6 +11,11 @@ import {
 import { IndexedDbService } from './persistence/indexed-db.service';
 import { switchMap, take } from 'rxjs/operators';
 
+/**
+ * The BookmarkDataService provides operations for managing bookmarks,
+ * including creating, retrieving, updating, deleting, and searching bookmarks.
+ * This service interacts with an IndexedDb-based service to perform data persistence.
+ */
 @Injectable()
 export class BookmarkDataService {
   private indexedDbService = inject(IndexedDbService);
