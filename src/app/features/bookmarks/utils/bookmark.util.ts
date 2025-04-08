@@ -83,7 +83,7 @@ export class BookmarksUtils {
     maxLength: number
   ): (control: AbstractControl) => ValidationErrors | null {
     return (control: AbstractControl): ValidationErrors | null => {
-      const value = control.value; // Get the control's current value
+      const value = control.value?.trim(); // Get the control's current value
       if (value && value.length > maxLength) {
         return { maxLength: { requiredLength: maxLength, actualLength: value.length } };
       }
