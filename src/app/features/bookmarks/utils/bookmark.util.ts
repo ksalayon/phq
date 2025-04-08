@@ -57,6 +57,41 @@ export class BookmarksUtils {
   }
 
   /**
+   * Validator function to ensure a URL is provided and is not empty or only whitespace.
+   *
+   * @return {Function} A validation function that checks the provided control's value.
+   * If the value is empty or contains only whitespace, it returns a validation error object with a required error. Otherwise, it returns null.
+   */
+  public static urlRequiredValidator(): Function {
+    return (control: AbstractControl): ValidationErrors | null => {
+      const value = control.value; // Get the control's current value
+      if (!value || value.trim().length === 0) {
+        return { required: true }; // Set the 'required' error if empty or only whitespace
+      }
+      return null; // No error
+    };
+  }
+
+  /**
+   * Validator that checks if the control's value exceeds the specified maximum length.
+   *
+   * @param {number} maxLength - The maximum allowable length for the control's value.
+   * @return {(control: AbstractControl) => ValidationErrors | null} A validation function that returns a validation error
+   * object if the value exceeds the maximum length, or null if the value is valid.
+   */
+  public static maxLengthValidator(
+    maxLength: number
+  ): (control: AbstractControl) => ValidationErrors | null {
+    return (control: AbstractControl): ValidationErrors | null => {
+      const value = control.value; // Get the control's current value
+      if (value && value.length > maxLength) {
+        return { maxLength: { requiredLength: maxLength, actualLength: value.length } };
+      }
+      return null; // No error
+    };
+  }
+
+  /**
    * Transforms an array of Bookmark objects into an array of VMBookmark objects,
    * converting date fields to formatted string representations.
    *

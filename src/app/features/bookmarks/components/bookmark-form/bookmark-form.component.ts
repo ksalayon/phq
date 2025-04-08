@@ -11,7 +11,7 @@ import {
   Output,
   ViewChild,
 } from '@angular/core';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { Bookmark, UpdateBookmarkPayload } from '../../models/bookmark';
 import { BookmarksUtils } from '../../utils/bookmark.util';
 import { MatIcon } from '@angular/material/icon';
@@ -23,6 +23,7 @@ import { MatProgressSpinner } from '@angular/material/progress-spinner';
 import { Observable } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { BaseFormInterface } from '../../../../shared/models/base-form.interface';
+import { MAX_NAME_LENGTH } from './models/bookmark-form.model';
 
 /**
  * BookmarkFormComponent is a reusable form component used for creating or editing
@@ -51,6 +52,7 @@ import { BaseFormInterface } from '../../../../shared/models/base-form.interface
   ],
 })
 export class BookmarkFormComponent implements OnInit, BaseFormInterface<UpdateBookmarkPayload> {
+  MAX_NAME_LENGTH = MAX_NAME_LENGTH;
   // Reference to the 'url' input field
   @ViewChild('urlInput', { read: ElementRef }) urlInput!: ElementRef;
   /**
@@ -98,10 +100,12 @@ export class BookmarkFormComponent implements OnInit, BaseFormInterface<UpdateBo
   }
 
   ngOnInit(): void {
+    // initialize form
     this.form = this.fb.group({
-      url: ['', [Validators.required, BookmarksUtils.urlValidator()]],
-      name: [''],
+      url: ['', [BookmarksUtils.urlRequiredValidator(), BookmarksUtils.urlValidator()]],
+      name: ['', [BookmarksUtils.maxLengthValidator(MAX_NAME_LENGTH)]],
     });
+    // In edit mode, fill up the fields with the passed bookmark fields
     if (this.bookmark) {
       this.form.patchValue({
         url: this.bookmark.url,

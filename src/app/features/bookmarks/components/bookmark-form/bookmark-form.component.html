@@ -22,6 +22,8 @@
       formControlName="name"
     />
     <mat-icon matSuffix>description</mat-icon>
+    <mat-error *ngIf="form.get('name')?.hasError('maxLength')">Max length is {{ MAX_NAME_LENGTH }}
+    </mat-error>
   </mat-form-field>
   <button mat-flat-button type="submit" [disabled]="form.invalid">
     {{ bookmark ? 'Update' : 'Add' }} Bookmark
