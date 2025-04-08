@@ -8,4 +8,4 @@ export interface VMBookmark extends Omit<Bookmark, 'createdAt' | 'modifiedAt'> {
 export const FIRST_PAGE_INDEX = 0;
 export const DEFAULT_PAGE_SIZE = 20;
 export const SEARCH_DEBOUNCE_TIME = 700;
-export const SEARCH_LENGTH_THRESHOLD = 2;
+export const MIN_SEARCH_LENGTH = 3;

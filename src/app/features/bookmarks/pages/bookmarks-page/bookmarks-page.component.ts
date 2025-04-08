@@ -22,8 +22,8 @@ import {
 import {
   DEFAULT_PAGE_SIZE,
   FIRST_PAGE_INDEX,
+  MIN_SEARCH_LENGTH,
   SEARCH_DEBOUNCE_TIME,
-  SEARCH_LENGTH_THRESHOLD,
   VMBookmark,
 } from '../../models/bookmarks-table.models';
 import { ModalService } from '../../../../shared/services/modal-dialog.service';
@@ -293,12 +293,10 @@ export class BookmarksPageComponent implements OnInit {
    * @param searchTerm
    */
   onSearchSubmit(searchTerm: string): void {
-    if (!searchTerm || searchTerm.trim().length <= SEARCH_LENGTH_THRESHOLD) {
-      console.log('search term too short');
+    if (!searchTerm || searchTerm.trim().length < MIN_SEARCH_LENGTH) {
       return;
     }
 
-    console.log('Search term submitted:', searchTerm);
     this.searchTerm$.next(searchTerm);
   }
 

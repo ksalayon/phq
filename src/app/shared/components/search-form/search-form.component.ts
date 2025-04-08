@@ -5,6 +5,7 @@ import { FormBuilder, FormGroup, FormsModule, Validators } from '@angular/forms'
 import { MatIconButton } from '@angular/material/button';
 import { CommonModule } from '@angular/common';
 import { MatTooltip } from '@angular/material/tooltip';
+import { MIN_SEARCH_LENGTH } from './models/search-form.model';
 
 @Component({
   standalone: true,
@@ -25,9 +26,10 @@ import { MatTooltip } from '@angular/material/tooltip';
 })
 export class SearchFormComponent {
   @Input() placeholder: string = 'Search';
-  @Output() searched: EventEmitter<string> = new EventEmitter();
+  @Input() minCharacterLength: number = MIN_SEARCH_LENGTH;
   @Input() searchTerm: string = '';
   @Output() clearSearch: EventEmitter<void> = new EventEmitter();
+  @Output() searched: EventEmitter<string> = new EventEmitter();
   searchForm: FormGroup;
 
   constructor(private fb: FormBuilder) {

@@ -19,7 +19,7 @@
       mat-icon-button
       matSuffix
       type="submit"
-      [disabled]="!searchInput.value || searchInput.value.trim().length < 3"
+      [disabled]="!searchInput.value || searchInput.value.trim().length < minCharacterLength"
     >
       <mat-icon>search</mat-icon>
     </button>
