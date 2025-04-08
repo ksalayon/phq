@@ -45,14 +45,28 @@ export class BookmarksUtils {
     return (control: AbstractControl): ValidationErrors | null => {
       const value = control.value;
 
-      // Passes validation if the field is empty
       if (!value) {
-        return null;
+        return null; // Optional field
       }
 
-      // Validate URL format otherwise
-      const urlPattern = /https?:\/\/.+/;
-      return urlPattern.test(value) ? null : { invalidUrl: true };
+      // Strict URL pattern (enforces two slashes after protocol)
+      const strictUrlPattern = /^https?:\/\/[^\s/$.?#].[^\s]*$/i;
+
+      if (!strictUrlPattern.test(value)) {
+        return { invalidUrl: true };
+      }
+
+      try {
+        const url = new URL(value);
+
+        if (url.protocol === 'http:' || url.protocol === 'https:') {
+          return null;
+        }
+
+        return { invalidUrl: true };
+      } catch {
+        return { invalidUrl: true };
+      }
     };
   }
 
