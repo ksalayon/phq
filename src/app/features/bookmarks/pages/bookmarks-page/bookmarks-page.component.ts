@@ -147,7 +147,7 @@ export class BookmarksPageComponent implements OnInit {
   }
 
   ngOnInit() {
-    this.monitorPermissions();
+    this.adjustPermissionsForSearchMode();
     this.monitorPaginatedBookmarks();
     this.monitorBookmarkSearch();
     this.monitorSearchResultCount();
@@ -164,7 +164,7 @@ export class BookmarksPageComponent implements OnInit {
    *
    * @return {void} This method does not return any value.
    */
-  monitorPermissions(): void {
+  adjustPermissionsForSearchMode(): void {
     this.isSearchMode$.subscribe((isSearchMode) => {
       this.bookmarkPermissions = {
         ...this.bookmarkPermissions,
@@ -329,12 +329,6 @@ export class BookmarksPageComponent implements OnInit {
     }
     this.pageIndex = 0;
     this.bookmarkStateService.saveCurrentPageState(0, this.pageSize);
-    this.router
-      .navigate([], {
-        queryParams: { pageIndex: 0, pageSize: this.pageSize },
-        queryParamsHandling: 'merge',
-      })
-      .then();
     this.searchTerm$.next(searchTerm);
   }
 

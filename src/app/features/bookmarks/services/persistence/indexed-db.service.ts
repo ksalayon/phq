@@ -49,7 +49,11 @@ export class IndexedDbService {
       bookmark.modifiedAt = new Date();
 
       // Only include existingBookmark properties if it is defined
-      await db.put('bookmarks', { ...(existingBookmark ?? {}), ...bookmark });
+      await db.put('bookmarks', {
+        ...(existingBookmark ?? {}),
+        ...bookmark,
+        url: bookmark.url.toLowerCase().trim(), // Make sure to normalize url string
+      });
       return bookmark;
     } catch (error) {
       throw new Error(error instanceof Error ? error.message : 'Failed to save bookmark.');
@@ -209,26 +213,29 @@ export class IndexedDbService {
     const results: Bookmark[] = [];
     let cursor = await index.openCursor(null, 'prev'); // 'prev' ensures descending order
     let skippedCount = 0; // Tracks how many matching items have been skipped
-
+    let readCount = 0;
+    const normalizedQuery = urlQuery.toLowerCase().trim();
     while (cursor && results.length < limit) {
       const bookmarkAtCursor = cursor.value as Bookmark;
 
       // Check if the bookmark URL matches the query
-      if (bookmarkAtCursor.url.toLowerCase().trim().includes(urlQuery.toLowerCase().trim())) {
+      if (bookmarkAtCursor.url.includes(normalizedQuery)) {
         // Skip items until the startIndex is reached
         if (skippedCount < startIndex) {
-          skippedCount++; // Count this as skipped
+          // Skip records more efficiently
+          await cursor.advance(startIndex - skippedCount);
+
+          skippedCount = startIndex; // Count this as skipped
         } else {
           results.push(bookmarkAtCursor); // Add to results if startIndex is reached
         }
       }
-
+      readCount++;
       // Move to the next record
       cursor = await cursor.continue();
     }
 
-    // Sort by `createdAt` (descending) and paginate
-    return results.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+    return results;
   }
 
   // Initialize the IndexedDB database
