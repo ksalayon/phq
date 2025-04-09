@@ -6,6 +6,7 @@ import { sampleBookmarks } from '../../utils/bookmarks.sample-data.util';
 const DB_NAME = 'BookmarksDB';
 const DB_VERSION = 7;
 const POPULATE_SAMPLE_DATA = true;
+const MAX_PAGE_SIZE = 50;
 
 /**
  * Service responsible for interacting with an IndexedDB instance for managing bookmarks.
@@ -24,6 +25,8 @@ export class IndexedDbService {
    * @type {Promise<IDBPDatabase>}
    */
   private dbPromise: Promise<IDBPDatabase>;
+  // Tracks the last seen limit to track correct lower limit in case of pagination limit changes
+  private lastSeenLimit = 0;
 
   constructor() {
     this.dbPromise = this.initializeDatabase();
@@ -114,17 +117,24 @@ export class IndexedDbService {
 
     const bookmarks: Bookmark[] = [];
     let cursor = await index.openCursor(null, 'prev'); // 'prev' ensures descending order
-
-    // Skip the initial items to handle pagination
     let currentIndex = 0;
+    const originalLimit = limit;
+    // prevent passed limit from going over the max limit
+    limit = limit > MAX_PAGE_SIZE ? MAX_PAGE_SIZE : limit;
+    // this helps correct ordering when changing page sizes where some items that needs to be checked for inclusion
+    // can be excluded from the lower limit
+    limit = limit < this.lastSeenLimit ? limit + this.lastSeenLimit : limit;
+    while (cursor && currentIndex <= limit + startIndex) {
+      const bookmark = cursor.value as Bookmark;
 
-    while (cursor && bookmarks.length < limit) {
-      if (currentIndex >= startIndex) {
-        bookmarks.push(cursor.value as Bookmark);
+      if (currentIndex >= startIndex && bookmarks.length < originalLimit) {
+        bookmarks.push(bookmark);
       }
       cursor = await cursor.continue();
       currentIndex++;
     }
+
+    this.lastSeenLimit = originalLimit;
     return bookmarks;
   }
 
