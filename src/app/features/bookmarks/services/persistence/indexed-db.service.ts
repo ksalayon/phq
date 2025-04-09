@@ -203,7 +203,8 @@ export class IndexedDbService {
     const db = await this.dbPromise;
     const transaction = db.transaction('bookmarks', 'readonly');
     const store = transaction.objectStore('bookmarks');
-    const index = store.index('url');
+
+    const index = store.index('url_createdAt');
 
     const results: Bookmark[] = [];
     let cursor = await index.openCursor(null, 'prev'); // 'prev' ensures descending order
@@ -213,7 +214,7 @@ export class IndexedDbService {
       const bookmarkAtCursor = cursor.value as Bookmark;
 
       // Check if the bookmark URL matches the query
-      if (bookmarkAtCursor.url.toLowerCase().includes(urlQuery.toLowerCase())) {
+      if (bookmarkAtCursor.url.toLowerCase().trim().includes(urlQuery.toLowerCase().trim())) {
         // Skip items until the startIndex is reached
         if (skippedCount < startIndex) {
           skippedCount++; // Count this as skipped
@@ -225,7 +226,9 @@ export class IndexedDbService {
       // Move to the next record
       cursor = await cursor.continue();
     }
-    return results;
+
+    // Sort by `createdAt` (descending) and paginate
+    return results.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
   }
 
   // Initialize the IndexedDB database
@@ -241,7 +244,8 @@ export class IndexedDbService {
           store.createIndex('url', 'url', { unique: true });
 
           // Add the `createdAt` index
-          store.createIndex('createdAt', 'createdAt');
+          store.createIndex('createdAt', 'createdAt', { unique: false });
+          store.createIndex('url_createdAt', ['url', 'createdAt'], { unique: true });
         }
         // For upgrading older versions, ensure any missing index is added
         if (oldVersion < DB_VERSION) {
@@ -254,7 +258,11 @@ export class IndexedDbService {
 
           // Add the `createdAt` index if it doesn't already exist
           if (!store.indexNames.contains('createdAt')) {
-            store.createIndex('createdAt', 'createdAt');
+            store.createIndex('createdAt', 'createdAt', { unique: false });
+          }
+
+          if (!store.indexNames.contains('url_createdAt')) {
+            store.createIndex('url', 'createdAt', { unique: true });
           }
         }
       },
