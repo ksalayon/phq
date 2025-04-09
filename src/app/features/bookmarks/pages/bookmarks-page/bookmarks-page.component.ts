@@ -327,6 +327,7 @@ export class BookmarksPageComponent implements OnInit {
     if (!searchTerm || searchTerm.trim().length < MIN_SEARCH_LENGTH) {
       return;
     }
+    this.pageIndex = 0;
     this.bookmarkStateService.saveCurrentPageState(0, this.pageSize);
     this.router
       .navigate([], {
