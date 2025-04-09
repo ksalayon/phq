@@ -1,59 +1,130 @@
-# Phq
+# 📙 Bookmark App
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 19.2.6.
+A modern, feature-rich web application for managing bookmarks. Built with **Angular**, **NgRx**, and **IndexedDB**, this app provides offline capabilities, a responsive UI, and robust state management.
 
-## Development server
+---
 
-To start a local development server, run:
+## 🚀 Overview
 
-```bash
-ng serve
+The **Bookmark App** is a scalable and modular web application designed to manage bookmarks with features like pagination, search, and offline support. It leverages:
+
+- **Angular** for the front-end framework  
+- **NgRx** for reactive state management  
+- **Angular Material** for modern UI components  
+- **IndexedDB** as a local data store
+
+---
+
+## 🧹 Key Components
+
+### 🔧 Frontend
+
+- **Framework:** Angular (v19.2.0)  
+- **UI Components:** Angular Material  
+- **State Management:** NgRx (Entity Adapter + Store)
+
+### 💄 Backend (Placeholder)
+
+- **Data Store:** IndexedDB  
+- No backend integration currently; IndexedDB simulates persistent storage.
+
+### 🧪 Tooling
+
+- **Testing:** Jest, Angular Testing Utilities  
+- **Linting & Formatting:** ESLint, Prettier (Google Style Guide)  
+- **Utilities:**  
+  - `rxjs` for reactive streams  
+  - `uuid` for generating unique IDs  
+  - `idb` package for IndexedDB interactions
+
+---
+
+## 🏗️ Application Architecture
+
+### 📦 State Management
+
+- **NgRx Store** handles application state via actions, reducers, and selectors.
+- **BookmarkDataService** abstracts CRUD and query logic, powered by `IndexedDbService`.
+- **BookmarkStateService** encapsulates the NgRx store logic for managing state related to bookmark operations and UI feedback.
+- **IndexedDbService** interfaces with IndexedDB using the `idb` package.
+
+---
+
+## 💽 UI Components
+
+### 📄 `BookmarksTableComponent`
+
+- Displays paginated, sortable bookmarks with `MatTable` and `MatPaginator`
+- Supports edit, delete, view, and pagination events
+- Uses observables (`bookmarks$`, `totalCount`) for data binding
+
+### 📂 `BookmarksPageComponent`
+
+- Acts as the main container
+- Composes:
+  - `SearchFormComponent`
+  - `BookmarksTableComponent`
+  - `BookmarkFormComponent`
+- Emits actions for CRUD, pagination, and search via NgRx
+
+### 🔍 `SearchFormComponent` (Beta)
+
+- Handles text-based search input with validations (min length: 3)
+- Emits search and clear events
+
+---
+
+## 🌟 Key Features
+
+### 📄 Scalable Pagination
+
+- **Chunked Data Loading**  
+  Uses `limit` and `startIndex` to fetch data in chunks via `getBookmarksPaginated`.
+
+- **IndexedDB Indexing**  
+  - Bookmarks indexed by `id` and searchable fields like `url`  
+  - Fast lookup using `searchBookmarksByUrl` and `getBookmarkSearchResultCount`
+
+- **Paginator Integration**  
+  - Uses `MatPaginator` for UI  
+  - Centralized pagination state via NgRx
+
+### 🔍 Search & Filtering
+
+- Debounced search using RxJS (`searchTerm$`, `debounceTime`)
+- Updates central state and resets `pageIndex` for fresh results
+
+### 🧰 Custom Directives
+
+- `OverflowTooltipDirective`: Adds tooltips only when content is clipped in table cells
+
+### 💾 State Persistence
+
+- NgRx actions like `saveCurrentPageState` preserve pagination settings across navigation
+
+### 🔗 Deep Linking
+
+Supports query parameters like:
+
+```
+?pageIndex=2&pageSize=5
 ```
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
+Example:  
+`http://angular-bookmarks-app-2025.s3-website-ap-southeast-2.amazonaws.com/?pageIndex=2&pageSize=5`
 
-## Code scaffolding
+---
 
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
+## ⚠️ Challenges & Limitations
 
-```bash
-ng generate component component-name
-```
+### Paginator Sync Issue
 
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
+When the search input is cleared, the paginator may retain an old state, leading to mismatched data. This is handled by:
 
-```bash
-ng generate --help
-```
+- Explicitly resetting `pageIndex` to `FIRST_PAGE_INDEX` during a new search or clear event
 
-## Building
+---
 
-To build the project run:
+## ✅ Conclusion
 
-```bash
-ng build
-```
-
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
-
-## Running unit tests
-
-To execute unit tests with the [Karma](https://karma-runner.github.io) test runner, use the following command:
-
-```bash
-ng test
-```
-
-## Running end-to-end tests
-
-For end-to-end (e2e) testing, run:
-
-```bash
-ng e2e
-```
-
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
-
-## Additional Resources
-
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+This project demonstrates a clean, scalable, and offline-capable Angular architecture using modern web tools. It serves as a solid foundation for future enhancements and backend integrations.
