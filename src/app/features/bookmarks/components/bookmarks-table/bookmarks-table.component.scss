@@ -1,5 +1,17 @@
 :host {
   position: relative;
+
+  mat-table {
+    mat-row {
+      transition: background-color 0.3s ease;
+
+      &:hover, &.row-hover {
+        background-color: #e0e0e0; // gray background during hover
+      }
+    }
+  }
+
+
 }
 
 .table-container {

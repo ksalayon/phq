@@ -40,7 +40,9 @@
     <ng-container matColumnDef="actions">
       <mat-header-cell *matHeaderCellDef> Actions</mat-header-cell>
       <mat-cell *matCellDef="let element">
-        <button mat-icon-button [matMenuTriggerFor]="menu">
+        <button mat-icon-button [matMenuTriggerFor]="menu"
+                (menuOpened)="onMenuOpen(element)" (menuClosed)="onMenuClose()"
+        >
           <mat-icon>more_vert</mat-icon>
         </button>
         <mat-menu #menu="matMenu">
@@ -69,7 +71,9 @@
     </ng-container>
 
     <mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></mat-header-row>
-    <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
+    <mat-row *matRowDef="let row; columns: displayedColumns;"
+             [class.row-hover]="expandedRow === row"
+    ></mat-row>
   </mat-table>
   <mat-paginator class="sticky-paginator" [pageSizeOptions]="[5, 10, 20, 50]" showFirstLastButtons
                  [pageSize]="20" [length]="totalCount"
