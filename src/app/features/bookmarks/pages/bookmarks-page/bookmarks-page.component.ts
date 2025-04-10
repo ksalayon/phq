@@ -35,7 +35,7 @@ import { SnackbarService } from '../../../../shared/services/snackbar.service';
 import { AsyncPipe, CommonModule } from '@angular/common';
 import { MatProgressSpinner } from '@angular/material/progress-spinner';
 import { MatTooltip } from '@angular/material/tooltip';
-import { filter, map } from 'rxjs/operators';
+import { filter, map, take } from 'rxjs/operators';
 import { MatButton } from '@angular/material/button';
 import { MatInputModule } from '@angular/material/input';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -422,9 +422,21 @@ export class BookmarksPageComponent implements OnInit {
           // Listen for success or failure
           this.bookmarkStateService
             .monitorSubmission()
-            .pipe(takeUntilDestroyed(this.destroyRef))
-            .subscribe(({ success, error }) => {
+            .pipe(withLatestFrom(this.searchTerm$), take(1))
+            .subscribe(([{ success }, searchTerm]) => {
               if (success) {
+                if (searchTerm) {
+                  this.isSearchLoading$.next(true);
+                  const dispatchParam = {
+                    urlQuery: searchTerm,
+                    startIndex: this.pageIndex * this.pageSize,
+                    limit: this.pageSize,
+                  };
+                  // Dispatch the action to search bookmarks with pagination
+                  this.bookmarkStateService.searchBookmarksByUrl$(dispatchParam);
+                } else {
+                  this.loadBookmarks();
+                }
                 this.modalService.close(); // Close the modal on success
                 this.snackbarService.success(`Bookmark successfully deleted`);
               } else {
