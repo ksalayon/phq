@@ -9,6 +9,8 @@ import {
   Input,
   OnInit,
   Output,
+  Signal,
+  signal,
   ViewChild,
 } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
@@ -21,7 +23,7 @@ import { MatButton } from '@angular/material/button';
 import { CommonModule } from '@angular/common';
 import { MatProgressSpinner } from '@angular/material/progress-spinner';
 import { Observable } from 'rxjs';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { BaseFormInterface } from '../../../../shared/models/base-form.interface';
 import { MAX_NAME_LENGTH } from './models/bookmark-form.model';
 
@@ -60,33 +62,26 @@ export class BookmarkFormComponent implements OnInit, BaseFormInterface<UpdateBo
    * The variable may be undefined if no bookmark exists or is not assigned.
    */
   @Input() bookmark?: Bookmark;
-  /**
-   * Represents an observable stream that emits the loading state as a boolean value.
-   * The observable emits `true` when a loading process is active and `false` when the process is complete.
-   */
-  @Input({ required: true }) isLoading$!: Observable<boolean>;
+  // Input to determine orientation of the form i.e. horizontal or vertical
+  @Input() orientation: 'horizontal' | 'vertical' = 'horizontal';
   /**
    * An event emitter that emits events related to updating a bookmark.
    * This allows subscribers to listen for and handle update bookmark events.
    */
   @Output() submitted = new EventEmitter<UpdateBookmarkPayload>();
   /**
-   * An optional Observable that emits either a string or null,
-   * representing an error message or the absence of an error.
-   */
-  @Input() error$?: Observable<string | null>;
-  /**
    * An event emitter that signals when a specific action or process has been completed or closed.
    */
   @Output() closed = new EventEmitter<void>();
-  // Input to determine orientation of the form i.e. horizontal or vertical
-  @Input() orientation: 'horizontal' | 'vertical' = 'horizontal';
 
   MAX_NAME_LENGTH = MAX_NAME_LENGTH;
-
   form!: FormGroup;
   destroyRef = inject(DestroyRef);
   fb = inject(FormBuilder);
+  isLoading: Signal<boolean> = signal(false);
+  error: Signal<string | null> = signal(null);
+  private _isLoading$!: Observable<boolean>;
+  private _error$!: Observable<string | null>;
 
   // set host css class based on the orientation input
   @HostBinding('class') get orientationClass() {
@@ -98,6 +93,26 @@ export class BookmarkFormComponent implements OnInit, BaseFormInterface<UpdateBo
    */
   get urlControl() {
     return this.form.get('url');
+  }
+
+  /**
+   * Represents an observable stream that emits the loading state as a boolean value.
+   * The observable emits `true` when a loading process is active and `false` when the process is complete.
+   */
+  @Input({ required: true })
+  set isLoading$(isLoading$: Observable<boolean>) {
+    this._isLoading$ = isLoading$;
+    this.isLoading = toSignal(isLoading$, { initialValue: false });
+  }
+
+  /**
+   * An optional Observable that emits either a string or null,
+   * representing an error message or the absence of an error.
+   */
+  @Input()
+  set error$(e: Observable<string | null>) {
+    this._error$ = e;
+    this.error = toSignal(e, { initialValue: null });
   }
 
   ngOnInit(): void {

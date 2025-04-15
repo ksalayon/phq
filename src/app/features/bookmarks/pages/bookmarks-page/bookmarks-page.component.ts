@@ -14,6 +14,7 @@ import {
   combineLatest,
   debounceTime,
   Observable,
+  of,
   Subject,
   tap,
   withLatestFrom,
@@ -89,7 +90,7 @@ export class BookmarksPageComponent implements OnInit {
   bookmarkUpdateErrorSubject$: Subject<string | null> | undefined = new Subject<string | null>();
   bookmarkUpdateError$ = this.bookmarkUpdateErrorSubject$?.asObservable();
   bookmarkCreateErrorSubject$: Subject<string | null> | undefined = new Subject<string | null>();
-  bookmarkCreateError$ = this.bookmarkCreateErrorSubject$?.asObservable();
+  bookmarkCreateError$ = this.bookmarkCreateErrorSubject$?.asObservable() ?? of(null);
 
   searchTerm$ = new BehaviorSubject<string>(''); // Manages the search input
 

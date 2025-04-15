@@ -9,7 +9,7 @@
       required
     />
     <mat-icon matSuffix>link</mat-icon>
-    <mat-error *ngIf="error$ | async as error">{{ error }}</mat-error>
+    <mat-error *ngIf="error() as error">{{ error }}</mat-error>
     <mat-error *ngIf="form.get('url')?.hasError('required') && !form.get('url')?.pristine">Url is required</mat-error>
     <mat-error *ngIf="form.get('url')?.hasError('invalidUrl')">URL is not valid
     </mat-error>
@@ -28,5 +28,5 @@
   <button mat-flat-button type="submit" [disabled]="form.invalid">
     {{ bookmark ? 'Update' : 'Add' }} Bookmark
   </button>
-  <mat-progress-spinner *ngIf="isLoading$ | async" mode="indeterminate"></mat-progress-spinner>
+  <mat-progress-spinner *ngIf="isLoading()" mode="indeterminate"></mat-progress-spinner>
 </form>
