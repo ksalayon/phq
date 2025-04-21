@@ -78,10 +78,8 @@ export class BookmarkFormComponent implements OnInit, BaseFormInterface<UpdateBo
   form!: FormGroup;
   destroyRef = inject(DestroyRef);
   fb = inject(FormBuilder);
-  isLoading: Signal<boolean> = signal(false);
   error: Signal<string | null> = signal(null);
-  private _isLoading$!: Observable<boolean>;
-  private _error$!: Observable<string | null>;
+  private _isLoading: boolean = false;
 
   // set host css class based on the orientation input
   @HostBinding('class') get orientationClass() {
@@ -99,10 +97,13 @@ export class BookmarkFormComponent implements OnInit, BaseFormInterface<UpdateBo
    * Represents an observable stream that emits the loading state as a boolean value.
    * The observable emits `true` when a loading process is active and `false` when the process is complete.
    */
+  get isLoading() {
+    return this._isLoading;
+  }
+
   @Input({ required: true })
-  set isLoading$(isLoading$: Observable<boolean>) {
-    this._isLoading$ = isLoading$;
-    this.isLoading = toSignal(isLoading$, { initialValue: false });
+  set isLoading(isLoading: boolean) {
+    this._isLoading = isLoading;
   }
 
   /**
@@ -111,7 +112,6 @@ export class BookmarkFormComponent implements OnInit, BaseFormInterface<UpdateBo
    */
   @Input()
   set error$(e: Observable<string | null>) {
-    this._error$ = e;
     this.error = toSignal(e, { initialValue: null });
   }
 

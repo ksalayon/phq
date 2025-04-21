@@ -4,6 +4,7 @@ import {
   DestroyRef,
   inject,
   OnInit,
+  signal,
   ViewChild,
 } from '@angular/core';
 import { BookmarkFormComponent } from '../../components/bookmark-form/bookmark-form.component';
@@ -81,8 +82,7 @@ export class BookmarksPageComponent implements OnInit {
   // Access the child phq-bookmark-form component
   @ViewChild(BookmarkFormComponent) bookmarkFormComponent!: BookmarkFormComponent;
 
-  isFormSubmittingSubject$: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(false);
-  isFormSubmitting$ = this.isFormSubmittingSubject$.asObservable();
+  isFormSubmitting = signal(false);
 
   pageIndex = FIRST_PAGE_INDEX; // Starting at the first page
   pageSize = DEFAULT_PAGE_SIZE; // Default page size (matches MatPaginator)
@@ -382,12 +382,12 @@ export class BookmarksPageComponent implements OnInit {
    * @return {void} No return value.
    */
   onCreateBookmark($event: CreateBookmarkPayload): void {
-    this.isFormSubmittingSubject$.next(true);
+    this.isFormSubmitting.set(true);
     this.bookmarkStateService
       .monitorSubmission()
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe(({ success, error, id }) => {
-        this.isFormSubmittingSubject$.next(false);
+        this.isFormSubmitting.set(false);
         if (error) {
           this?.bookmarkCreateErrorSubject$?.next(error);
         }
@@ -466,7 +466,7 @@ export class BookmarksPageComponent implements OnInit {
     this.modalService.open(BookmarkFormComponent, {
       inputs: {
         bookmark: BookmarksUtils.transformSingleVMToBookmark(bookmark),
-        isLoading$: this.isFormSubmitting$,
+        isLoading: this.isFormSubmitting(),
         error$: this.bookmarkUpdateError$,
         orientation: 'vertical',
       },

@@ -10,7 +10,7 @@
 
 <phq-bookmark-form
   (submitted)="onCreateBookmark($event)"
-  [isLoading$]="isFormSubmitting$"
+  [isLoading]="isFormSubmitting()"
   [error$]="bookmarkCreateError$"
   matTooltip="Add a bookmark by entering a name and URL, then submit"
   [matTooltipDisabled]="!!((bookmarksTotalCount$ | async) ?? 0 > 0)"
