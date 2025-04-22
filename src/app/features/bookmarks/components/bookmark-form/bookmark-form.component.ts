@@ -9,7 +9,6 @@ import {
   Input,
   OnInit,
   Output,
-  Signal,
   signal,
   ViewChild,
 } from '@angular/core';
@@ -22,8 +21,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatButton } from '@angular/material/button';
 import { CommonModule } from '@angular/common';
 import { MatProgressSpinner } from '@angular/material/progress-spinner';
-import { Observable } from 'rxjs';
-import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { BaseFormInterface } from '../../../../shared/models/base-form.interface';
 import { MAX_NAME_LENGTH } from './models/bookmark-form.model';
 
@@ -78,8 +76,8 @@ export class BookmarkFormComponent implements OnInit, BaseFormInterface<UpdateBo
   form!: FormGroup;
   destroyRef = inject(DestroyRef);
   fb = inject(FormBuilder);
-  error: Signal<string | null> = signal(null);
   private _isLoading: boolean = false;
+  private _error = signal<string | null>(null);
 
   // set host css class based on the orientation input
   @HostBinding('class') get orientationClass() {
@@ -91,6 +89,10 @@ export class BookmarkFormComponent implements OnInit, BaseFormInterface<UpdateBo
    */
   get urlControl() {
     return this.form.get('url');
+  }
+
+  get error() {
+    return this._error();
   }
 
   /**
@@ -111,8 +113,8 @@ export class BookmarkFormComponent implements OnInit, BaseFormInterface<UpdateBo
    * representing an error message or the absence of an error.
    */
   @Input()
-  set error$(e: Observable<string | null>) {
-    this.error = toSignal(e, { initialValue: null });
+  set error(e: string | null) {
+    this._error.set(e);
   }
 
   ngOnInit(): void {

@@ -2,6 +2,7 @@ import {
   ChangeDetectionStrategy,
   Component,
   DestroyRef,
+  effect,
   inject,
   OnInit,
   signal,
@@ -10,21 +11,11 @@ import {
 import { BookmarkFormComponent } from '../../components/bookmark-form/bookmark-form.component';
 import { Bookmark, CreateBookmarkPayload, CurrentPageState } from '../../models/bookmark';
 import { BookmarksTableComponent } from '../../components/bookmarks-table/bookmarks-table.component';
-import {
-  BehaviorSubject,
-  combineLatest,
-  debounceTime,
-  Observable,
-  of,
-  Subject,
-  tap,
-  withLatestFrom,
-} from 'rxjs';
+import { tap, withLatestFrom } from 'rxjs';
 import {
   DEFAULT_PAGE_SIZE,
   FIRST_PAGE_INDEX,
   MIN_SEARCH_LENGTH,
-  SEARCH_DEBOUNCE_TIME,
   VMBookmark,
 } from '../../models/bookmarks-table.models';
 import { ModalService } from '../../../../shared/services/modal-dialog.service';
@@ -32,12 +23,12 @@ import { BookmarksUtils } from '../../utils/bookmark.util';
 import { ConfirmDeleteDialogComponent } from '../../components/confirm-delete-dialog/confirm-delete-dialog.component';
 import { BookmarkStateService } from '../../services/bookmark-state.service';
 import { ActivatedRoute, Router } from '@angular/router';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { SnackbarService } from '../../../../shared/services/snackbar.service';
-import { AsyncPipe, CommonModule } from '@angular/common';
+import { CommonModule } from '@angular/common';
 import { MatProgressSpinner } from '@angular/material/progress-spinner';
 import { MatTooltip } from '@angular/material/tooltip';
-import { filter, map, take } from 'rxjs/operators';
+import { filter, take } from 'rxjs/operators';
 import { MatButton } from '@angular/material/button';
 import { MatInputModule } from '@angular/material/input';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -64,7 +55,6 @@ import { BookmarkPermissions } from '../../components/bookmarks-table/models/boo
     CommonModule,
     BookmarkFormComponent,
     BookmarksTableComponent,
-    AsyncPipe,
     MatProgressSpinner,
     MatTooltip,
     MatButton,
@@ -87,17 +77,12 @@ export class BookmarksPageComponent implements OnInit {
   pageIndex = FIRST_PAGE_INDEX; // Starting at the first page
   pageSize = DEFAULT_PAGE_SIZE; // Default page size (matches MatPaginator)
 
-  bookmarkUpdateErrorSubject$: Subject<string | null> | undefined = new Subject<string | null>();
-  bookmarkUpdateError$ = this.bookmarkUpdateErrorSubject$?.asObservable();
-  bookmarkCreateErrorSubject$: Subject<string | null> | undefined = new Subject<string | null>();
-  bookmarkCreateError$ = this.bookmarkCreateErrorSubject$?.asObservable() ?? of(null);
-
-  searchTerm$ = new BehaviorSubject<string>(''); // Manages the search input
-
-  // Observable to determine if we are in search mode (searchTerm is not empty)
-  isSearchMode$ = this.searchTerm$.pipe(
-    map((term) => term.trim().length > 0) // True if search is active
-  );
+  bookmarkUpdateError = signal<string | null>(null);
+  bookMarkCreateError = signal<string | null>(null);
+  // Manages the search input
+  searchTerm = signal<string>('');
+  // Signal to determine if we are in search mode (searchTerm is not empty)
+  isSearchMode = signal<boolean>(false);
 
   // Permissions object for the table component
   bookmarkPermissions: BookmarkPermissions = {
@@ -107,35 +92,14 @@ export class BookmarksPageComponent implements OnInit {
     canView: true, // Initial state: View is allowed
   };
 
-  bookmarksSubject$ = new BehaviorSubject<Bookmark[]>([]);
-  bookmarks$ = this.bookmarksSubject$.asObservable();
-
+  bookmarks = signal<Bookmark[]>([]);
   destroyRef = inject(DestroyRef);
   // modal service from shared directory
   modalService = inject(ModalService);
   bookmarkStateService = inject(BookmarkStateService);
 
-  bookmarksTotalCountSUbject$ = new BehaviorSubject<number>(0);
-  bookmarksTotalCount$ = this.bookmarksTotalCountSUbject$.asObservable();
-
-  private router = inject(Router);
-  private snackbarService = inject(SnackbarService);
-  private route = inject(ActivatedRoute);
-
-  private searchPageState$ = new BehaviorSubject<CurrentPageState & { totalCount: number }>({
-    pageIndex: 0,
-    pageSize: 20,
-    totalCount: 0,
-  });
-
-  private isSearchLoading$ = new BehaviorSubject<boolean>(false);
-
-  get loading$(): Observable<boolean> {
-    return combineLatest([this.isSearchLoading$, this.bookmarkStateService.selectLoading$()]).pipe(
-      map(([isSearchLoading, isStoreLoading]) => isSearchLoading || isStoreLoading)
-    );
-  }
-
+  bookmarksTotalCount = signal<number>(0);
+  isLoading = signal<boolean>(true);
   /**
    * A getter method that provides an observable which emits the current page state
    * from the application's data store. This allows reactive subscription to
@@ -143,127 +107,156 @@ export class BookmarksPageComponent implements OnInit {
    *
    * @return {Observable<CurrentPageState>} An observable of the current page state.
    */
-  get currentPageState$(): Observable<CurrentPageState> {
-    return this.bookmarkStateService.selectCurrentPageState$();
-  }
+  currentPage = toSignal(this.bookmarkStateService.selectCurrentPageState$(), {
+    initialValue: {
+      pageIndex: FIRST_PAGE_INDEX,
+      pageSize: DEFAULT_PAGE_SIZE,
+    },
+  });
+  bookmarksLoading = toSignal(this.bookmarkStateService.selectLoading$());
 
-  ngOnInit() {
-    this.adjustPermissionsForSearchMode();
-    this.monitorPaginatedBookmarks();
-    this.monitorBookmarkSearch();
-    this.monitorSearchResultCount();
-    this.monitorBookmarksTotalCount();
-    this.monitorPaginationChanges();
-    this.monitorQueryParams();
-  }
+  private router = inject(Router);
+  private snackbarService = inject(SnackbarService);
+  private route = inject(ActivatedRoute);
 
   /**
-   * Monitors and updates the `bookmarkPermissions` object based on the application's search mode status.
-   *
-   * Subscribes to the `isSearchMode$` observable to determine if the application is in search mode
-   * and adjusts the `canView` permission accordingly. When in search mode, `canView` is disabled.
-   *
-   * @return {void} This method does not return any value.
+   * Represents the state of the search page, including pagination and total count of items.
+   * Structure:
+   * - `pageIndex`: Indicates the current page index.
+   * - `pageSize`: Specifies the number of items per page.
+   * - `totalCount`: Represents the total number of items available.
    */
-  adjustPermissionsForSearchMode(): void {
-    this.isSearchMode$.subscribe((isSearchMode) => {
-      this.bookmarkPermissions = {
-        ...this.bookmarkPermissions,
-        canView: !isSearchMode, // Disable canView if in search mode
-      };
-    });
-  }
+  private searchPageState = signal<CurrentPageState & { totalCount: number }>({
+    pageIndex: FIRST_PAGE_INDEX,
+    pageSize: DEFAULT_PAGE_SIZE,
+    totalCount: 0,
+  });
+
+  private isSearchLoading = signal<boolean>(false);
+
+  private bookmarksTotalCountState = toSignal(
+    this.bookmarkStateService.selectBookmarksTotalCount$()
+  );
 
   /**
-   * Monitors and subscribes to the paginated bookmarks based on the current page index and page size.
-   * Fetches the bookmarks using the store selector and updates the respective observables.
+   * Adjusts the bookmark permissions based on the search mode status.
+   * This reactive effect evaluates whether the application is in search mode
+   * and modifies the `canView` property of `bookmarkPermissions` accordingly.
+   * If the application is in search mode, `canView` is set to 'false' to restrict viewing permissions.
    *
-   * @return {void} No return value.
+   * @variable {Function} adjustPermissionsForSearchMode
    */
-  monitorPaginatedBookmarks(): void {
+  private adjustPermissionsForSearchMode = effect(() => {
+    const isSearchMode = this.isSearchMode();
+    this.bookmarkPermissions = {
+      ...this.bookmarkPermissions,
+      canView: !isSearchMode, // Disable canView if in search mode
+    };
+  });
+
+  /**
+   * Listens to and monitors the paginated bookmarks for the current page defined by
+   * the page index and page size. It observes changes from the bookmark state service
+   * and updates the local bookmarks store with the new data.
+   *
+   * This variable uses reactive programming to handle bookmark data as follows:
+   * - Subscribes to bookmarks data for the current page using the `selectCurrentPageBookmarks$` method.
+   * - Automatically cancels the subscription when the component is destroyed using `takeUntilDestroyed`.
+   * - Sets the loading state (`isSearchLoading`) to false before processing the data.
+   * - Filters out any null, undefined, or empty bookmark arrays to ensure only valid data is processed.
+   * - Updates the `bookmarks` store with the latest bookmark data.
+   *
+   * Additionally, logs intermediate status and the final list of bookmarks for debugging purposes.
+   */
+  private monitorPaginatedBookmarks = effect(() => {
     this.bookmarkStateService
       .selectCurrentPageBookmarks$(this.pageIndex, this.pageSize)
-      .pipe(takeUntilDestroyed(this.destroyRef))
+      .pipe(
+        takeUntilDestroyed(this.destroyRef),
+        tap(() => {
+          this.isSearchLoading.set(false);
+        }),
+        filter((bookmarks) => !!bookmarks && bookmarks.length > 0)
+      )
       .subscribe((bookmarks) => {
-        this.isSearchLoading$.next(false);
-        this.bookmarksSubject$.next(bookmarks);
+        this.bookmarks.set(bookmarks);
       });
-  }
+  });
 
   /**
-   * Monitors the bookmark search functionality by listening to search term inputs,
-   * applying filters, debouncing, and managing pagination. It dispatches an action
-   * to execute a search operation with the current query and pagination parameters,
-   * and updates the search loading state in the process.
+   * Monitors and handles the search functionality for bookmarks based on the search term and pagination state.
    *
-   * @return {void} Executes the necessary operations to handle bookmark search,
-   * including dispatching actions and updating internal states.
+   * Processes the search query if it meets the minimum length requirement, and dispatches the search request
+   * with relevant parameters such as the query string, starting index, and limit based on the pagination state.
+   * Additionally, sets the loading state to indicate that a search operation is ongoing.
    */
-  monitorBookmarkSearch(): void {
-    this.searchTerm$
-      .pipe(
-        filter((query) => !!query), // Only trigger this if the search string is not empty
-        debounceTime(SEARCH_DEBOUNCE_TIME),
-        // distinctUntilChanged(), // Make sure that it only triggers the rest of the pipe if the input is distinct
-        withLatestFrom(this.searchPageState$),
-        tap(([query, searchPageState]) => {
-          this.pageIndex = searchPageState.pageIndex;
-          this.pageSize = searchPageState.pageSize;
-          const dispatchParam = {
-            urlQuery: query,
-            startIndex: searchPageState.pageIndex * searchPageState.pageSize,
-            limit: searchPageState.pageSize,
-          };
-          // Dispatch the searchBookmarksByUrl action with the query and pagination state
-          this.bookmarkStateService.searchBookmarksByUrl$(dispatchParam);
-
-          // Set the loading state
-          this.isSearchLoading$.next(true);
-        }),
-        takeUntilDestroyed(this.destroyRef)
-      )
-      .subscribe();
-  }
+  private monitorBookmarkSearch = effect(() => {
+    const query = this.searchTerm();
+    const { pageIndex, pageSize } = this.searchPageState();
+    if (query && query.trim().length >= MIN_SEARCH_LENGTH) {
+      const dispatchParam = {
+        urlQuery: query,
+        startIndex: pageIndex * pageSize,
+        limit: pageSize,
+      };
+      this.isSearchLoading.set(true);
+      this.bookmarkStateService.searchBookmarksByUrl$(dispatchParam);
+    }
+  });
 
   /**
-   * Monitors the search result count for bookmark results based on the current search term.
-   * Compares the current search term with the previous one and dispatches an action to fetch
-   * the search result count if they differ and there are results present.
+   * Monitors changes to pagination-related parameters and handles corresponding actions.
    *
-   * @return {void} Does not return a value.
+   * This effect tracks changes to the current page's `pageSize` and `pageIndex`, as well as the search term.
+   * Upon detecting changes, it updates the local pagination state and performs appropriate actions:
+   *
+   * - If no search term is provided, the method loads all bookmarks.
+   * - If a search term exists, it fetches paginated and filtered bookmark results based on the search query
+   *   and updates the loading state during the process.
+   *
+   * The search is conducted by dispatching a query to the `bookmarkStateService` which performs the paginated
+   * search operation.
    */
-  monitorSearchResultCount(): void {
-    let currentSearchTerm = '';
-    this.bookmarksSubject$
-      .pipe(
-        withLatestFrom(this.searchTerm$),
-        tap(([results, searchTerm]) => {
-          if (results.length && searchTerm !== currentSearchTerm) {
-            currentSearchTerm = searchTerm;
-            // Dispatch the action to get the search result count
-            this.bookmarkStateService.getBookmarkSearchResultCount(searchTerm);
-          }
-        }),
-        takeUntilDestroyed(this.destroyRef)
-      )
-      .subscribe();
-  }
+  private monitorPaginationChanges = effect(() => {
+    const { pageSize, pageIndex } = this.currentPage();
+    const searchTerm = this.searchTerm();
+    this.pageIndex = pageIndex;
+    this.pageSize = pageSize;
+    if (!searchTerm) {
+      this.loadBookmarks();
+      return;
+    }
+    this.isSearchLoading.set(true);
+    const dispatchParam = {
+      urlQuery: searchTerm,
+      startIndex: pageIndex * pageSize,
+      limit: pageSize,
+    };
+    // Dispatch the action to search bookmarks with pagination
+    this.bookmarkStateService.searchBookmarksByUrl$(dispatchParam);
+  });
 
-  /**
-   * Monitors the total count of bookmarks and updates the internal subject with the count.
-   *
-   * @return {void} This method does not return any value.
-   */
-  monitorBookmarksTotalCount(): void {
-    this.bookmarkStateService
-      .selectBookmarksTotalCount$()
-      .pipe(
-        map((count) => count ?? 0),
-        takeUntilDestroyed(this.destroyRef)
-      )
-      .subscribe((count) => {
-        this.bookmarksTotalCountSUbject$.next(count);
-      });
+  constructor() {
+    // Monitor if page is in search mode
+    effect(() => {
+      const searchTerm = this.searchTerm();
+      if (searchTerm.trim()) {
+        this.isSearchMode.set(true);
+      }
+    });
+
+    // Coordinate loading flag
+    effect(() => {
+      const isSearchLoading = this.isSearchLoading();
+      const isBookmarksLoading = this.bookmarksLoading;
+      this.isLoading.set(isSearchLoading || isBookmarksLoading());
+    });
+
+    // Monitors and updates total bookmarks count
+    effect(() => {
+      const bookmarksTotalCountState = this.bookmarksTotalCountState();
+      this.bookmarksTotalCount.set(bookmarksTotalCountState ?? 0);
+    });
   }
 
   /**
@@ -284,37 +277,8 @@ export class BookmarksPageComponent implements OnInit {
     });
   }
 
-  /**
-   * Monitors changes in pagination state and manages the logic for loading bookmarks or performing search operations based on the current page state and search term.
-   *
-   * @return {void} This method does not return a value. It performs side effects such as dispatching actions and triggering data loading.
-   */
-  monitorPaginationChanges(): void {
-    this.currentPageState$
-      .pipe(
-        withLatestFrom(this.searchTerm$),
-        tap(([pageState, search]) => {
-          const pageIndex = pageState.pageIndex || FIRST_PAGE_INDEX;
-          const pageSize = pageState.pageSize || DEFAULT_PAGE_SIZE;
-          if (search) {
-            this.isSearchLoading$.next(true);
-            const dispatchParam = {
-              urlQuery: search,
-              startIndex: pageIndex * pageSize,
-              limit: pageSize,
-            };
-            // Dispatch the action to search bookmarks with pagination
-            this.bookmarkStateService.searchBookmarksByUrl$(dispatchParam);
-          }
-          this.pageIndex = pageIndex;
-          this.pageSize = pageSize;
-        }),
-        filter(([_, search]) => !search), // Only proceed if no search term is provided
-        takeUntilDestroyed(this.destroyRef)
-      )
-      .subscribe(() => {
-        this.loadBookmarks(); // Load bookmarks based on the current state
-      });
+  ngOnInit() {
+    this.monitorQueryParams();
   }
 
   /**
@@ -330,7 +294,7 @@ export class BookmarksPageComponent implements OnInit {
     }
     this.pageIndex = 0;
     this.bookmarkStateService.saveCurrentPageState(0, this.pageSize);
-    this.searchTerm$.next(searchTerm);
+    this.searchTerm.set(searchTerm);
   }
 
   /**
@@ -340,7 +304,7 @@ export class BookmarksPageComponent implements OnInit {
    */
   clearSearch(): void {
     this.pageIndex = 0; // Reset the page index to the first page
-    this.searchTerm$.next(''); // Clear the search term
+    this.searchTerm.set(''); // Clear the search term
     this.bookmarkStateService.loadBookmarks(this.pageIndex, this.pageSize); // Reload all bookmarks
     this.bookmarkStateService.saveCurrentPageState(this.pageIndex, this.pageSize); // Save state to redux/ngrx
   }
@@ -389,7 +353,7 @@ export class BookmarksPageComponent implements OnInit {
       .subscribe(({ success, error, id }) => {
         this.isFormSubmitting.set(false);
         if (error) {
-          this?.bookmarkCreateErrorSubject$?.next(error);
+          this?.bookMarkCreateError?.set(error);
         }
         if (success && id) {
           // Redirect to the details page with the created ID
@@ -423,11 +387,11 @@ export class BookmarksPageComponent implements OnInit {
           // Listen for success or failure
           this.bookmarkStateService
             .monitorSubmission()
-            .pipe(withLatestFrom(this.searchTerm$), take(1))
+            .pipe(withLatestFrom(this.searchTerm()), take(1))
             .subscribe(([{ success }, searchTerm]) => {
               if (success) {
                 if (searchTerm) {
-                  this.isSearchLoading$.next(true);
+                  this.isSearchLoading.set(true);
                   const dispatchParam = {
                     urlQuery: searchTerm,
                     startIndex: this.pageIndex * this.pageSize,
@@ -467,7 +431,7 @@ export class BookmarksPageComponent implements OnInit {
       inputs: {
         bookmark: BookmarksUtils.transformSingleVMToBookmark(bookmark),
         isLoading: this.isFormSubmitting(),
-        error$: this.bookmarkUpdateError$,
+        error: this.bookmarkUpdateError(),
         orientation: 'vertical',
       },
       outputs: {
@@ -481,7 +445,7 @@ export class BookmarksPageComponent implements OnInit {
                 this.modalService.close(); // Close the modal on success
                 this.snackbarService.success(`Bookmark successfully updated`);
               } else if (error) {
-                this.bookmarkUpdateErrorSubject$?.next(error || 'Bookmark update failed');
+                this.bookmarkUpdateError.set(error || 'Bookmark update failed');
               }
             });
           // dispatch event to update bookmark
@@ -509,4 +473,25 @@ export class BookmarksPageComponent implements OnInit {
   focusOnForm(): void {
     this.bookmarkFormComponent?.focusUrl();
   }
+
+  /**
+   * Monitors the search result count for bookmark results based on the current search term.
+   * Compares the current search term with the previous one and dispatches an action to fetch
+   * the search result count if they differ and there are results present.
+   *
+   * @return {void} Does not return a value.
+   */
+  private monitorSearchResultCount = (): void => {
+    let currentSearchTerm = '';
+    effect(() => {
+      const searchTerm = this.searchTerm();
+      const bookmarks = this.bookmarks();
+      const { totalCount } = this.searchPageState();
+      if (bookmarks.length && searchTerm !== currentSearchTerm) {
+        currentSearchTerm = searchTerm;
+        // Dispatch the action to get the search result count
+        this.bookmarkStateService.getBookmarkSearchResultCount(searchTerm);
+      }
+    });
+  };
 }

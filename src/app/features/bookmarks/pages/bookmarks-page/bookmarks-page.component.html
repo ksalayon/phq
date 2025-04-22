@@ -1,8 +1,8 @@
-<div *ngIf="(bookmarksTotalCount$ | async) === 0 && (loading$ | async) === false" class="empty-state">
+<div *ngIf="bookmarksTotalCount() === 0 && !isLoading()" class="empty-state">
   <p class="empty-message">
-    {{ (searchTerm$ | async) === '' ? 'There are no bookmarks yet - start adding them!' : 'No results found' }}
+    {{ searchTerm() === '' ? 'There are no bookmarks yet - start adding them!' : 'No results found' }}
   </p>
-  <button mat-raised-button color="primary" (click)="focusOnForm()" *ngIf="(searchTerm$ | async) === ''">Create Your
+  <button mat-raised-button color="primary" (click)="focusOnForm()" *ngIf="searchTerm() === ''">Create Your
     First Bookmark
   </button>
 </div>
@@ -11,24 +11,24 @@
 <phq-bookmark-form
   (submitted)="onCreateBookmark($event)"
   [isLoading]="isFormSubmitting()"
-  [error$]="bookmarkCreateError$"
+  [error]="bookMarkCreateError()"
   matTooltip="Add a bookmark by entering a name and URL, then submit"
-  [matTooltipDisabled]="!!((bookmarksTotalCount$ | async) ?? 0 > 0)"
+  [matTooltipDisabled]="(bookmarksTotalCount() > 0)"
 
 >
 </phq-bookmark-form>
 
 <phq-search-form class="search-form" (clearSearch)="clearSearch()" (searched)="onSearchSubmit($event)"
-                 [searchTerm]="(searchTerm$ | async) ?? ''"></phq-search-form>
+                 [searchTerm]="searchTerm()"></phq-search-form>
 
 
 <div class="bookmarks__list">
   <phq-bookmarks-table
-    *ngIf="(bookmarksTotalCount$ | async) ?? 0 > 0"
-    [bookmarks$]="bookmarks$"
-    [totalCount]="(bookmarksTotalCount$ | async) || 0"
-    [loading$]="loading$"
-    [currentPageState$]="currentPageState$"
+    *ngIf="bookmarksTotalCount() > 0"
+    [bookmarks]="bookmarks()"
+    [totalCount]="bookmarksTotalCount() || 0"
+    [loading]="isLoading()"
+    [currentPageState]="currentPage()"
     [permissions]="bookmarkPermissions"
     (deleteBookmark)="onDeleteBookmark($event)"
     (editBookmark)="onEditBookmark($event)"
@@ -36,6 +36,6 @@
     (pageChange)="onPaginatorChange($event)">
   </phq-bookmarks-table>
 </div>
-<div class="loading-container" *ngIf="loading$ | async">
+<div class="loading-container" *ngIf="isLoading()">
   <mat-spinner></mat-spinner>
 </div>
