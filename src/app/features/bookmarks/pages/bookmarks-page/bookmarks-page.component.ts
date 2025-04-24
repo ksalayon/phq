@@ -255,7 +255,10 @@ export class BookmarksPageComponent implements OnInit {
     // Monitors and updates total bookmarks count
     effect(() => {
       const bookmarksTotalCountState = this.bookmarksTotalCountState();
-      this.bookmarksTotalCount.set(bookmarksTotalCountState ?? 0);
+      const isLoading = this.isLoading();
+      if (!isLoading) {
+        this.bookmarksTotalCount.set(bookmarksTotalCountState ?? 0);
+      }
     });
   }
 

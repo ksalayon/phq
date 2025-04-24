@@ -1,13 +1,11 @@
 import {
-  AfterViewInit,
   ChangeDetectionStrategy,
   Component,
-  DestroyRef,
+  computed,
   effect,
   EventEmitter,
-  inject,
+  input,
   Input,
-  OnChanges,
   Output,
   signal,
   ViewChild,
@@ -62,10 +60,9 @@ import { BookmarkPermissions } from './models/bookmarks-table.model';
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class BookmarksTableComponent implements AfterViewInit, OnChanges {
+export class BookmarksTableComponent {
   @ViewChild(MatPaginator) paginator!: MatPaginator;
-  @Input({ required: true }) totalCount!: number;
-  @Input({ required: true }) loading!: boolean;
+
   @Input({ required: true }) permissions!: BookmarkPermissions;
 
   // Emit an "Edit" event
@@ -95,10 +92,14 @@ export class BookmarksTableComponent implements AfterViewInit, OnChanges {
   ];
   dataSource: MatTableDataSource<Bookmark> = new MatTableDataSource<Bookmark>([]);
   expandedRow: Bookmark | null = null;
+  currentTotalCount = input<number>(0);
+  loading = input<boolean>(false);
+  currentPageIndex = signal<number>(FIRST_PAGE_INDEX);
+  currentPageSize = signal<number>(DEFAULT_PAGE_SIZE);
+  pageIndex = computed(() => this.currentPageIndex());
+  pageSize = computed(() => this.currentPageSize());
+  totalCount = computed(() => this.currentTotalCount());
 
-  private destroyRef = inject(DestroyRef);
-  private currentPageIndex = FIRST_PAGE_INDEX;
-  private currentPageSize = DEFAULT_PAGE_SIZE;
   private _bookmarks = signal<Bookmark[]>([]);
   private _currentPageState = signal<CurrentPageState>({
     pageIndex: FIRST_PAGE_INDEX,
@@ -106,19 +107,20 @@ export class BookmarksTableComponent implements AfterViewInit, OnChanges {
   });
 
   constructor() {
-    // Initialize dataSource with available bookmarks data
+    /**
+     * Synchronize datasource and paginator based on current page state and bookmarks
+     * list updates for the current page
+     */
     effect(() => {
+      const isLoading = this.loading();
+      if (isLoading) {
+        return;
+      }
       const bookmarks: Bookmark[] = this._bookmarks();
-      this.dataSource = new MatTableDataSource<Bookmark>(bookmarks);
-      this.updatePaginator(); // Ensure paginator syncs with bookmarks
-    });
-
-    // Monitor changes in pagination state (page index and page size).
-    // and ensures the paginator updates
-    effect(() => {
       const { pageIndex, pageSize } = this._currentPageState();
-      this.currentPageIndex = pageIndex;
-      this.currentPageSize = pageSize;
+      this.dataSource = new MatTableDataSource<Bookmark>(bookmarks);
+      this.currentPageIndex.set(pageIndex);
+      this.currentPageSize.set(pageSize);
       this.updatePaginator();
     });
   }
@@ -139,19 +141,6 @@ export class BookmarksTableComponent implements AfterViewInit, OnChanges {
   @Input({ required: true })
   set bookmarks(values: Bookmark[]) {
     this._bookmarks.set(values);
-  }
-
-  ngAfterViewInit(): void {
-    if (this.paginator) {
-      this.dataSource.paginator = this.paginator;
-      this.updatePaginator(); // Ensure paginator length is updated properly
-    }
-  }
-
-  ngOnChanges() {
-    if (this.totalCount !== undefined && this.paginator) {
-      this.updatePaginator();
-    }
   }
 
   /**
@@ -222,9 +211,9 @@ export class BookmarksTableComponent implements AfterViewInit, OnChanges {
    */
   private updatePaginator(): void {
     if (this.paginator) {
-      this.paginator.length = this.totalCount; // Total number of records
-      this.paginator.pageIndex = this.currentPageIndex ?? this.paginator.pageIndex;
-      this.paginator.pageSize = this.currentPageSize ?? this.paginator.pageSize;
+      this.paginator.length = this.totalCount(); // Total number of records
+      this.paginator.pageIndex = this.pageIndex() ?? this.paginator.pageIndex;
+      this.paginator.pageSize = this.pageSize() ?? this.paginator.pageSize;
     }
   }
 }

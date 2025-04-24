@@ -26,7 +26,7 @@
   <phq-bookmarks-table
     *ngIf="bookmarksTotalCount() > 0"
     [bookmarks]="bookmarks()"
-    [totalCount]="bookmarksTotalCount() || 0"
+    [currentTotalCount]="bookmarksTotalCount() || 0"
     [loading]="isLoading()"
     [currentPageState]="currentPage()"
     [permissions]="bookmarkPermissions"
